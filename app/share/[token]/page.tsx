@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { getDreamByShareToken } from '@/lib/supabase'
 import type { Dream } from '@/lib/types'
 
 export default function SharedDreamPage() {
@@ -10,13 +11,10 @@ export default function SharedDreamPage() {
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
-    // In production this would query Supabase by share_token
-    // For now, search localStorage
-    const stored = localStorage.getItem('somnus_dreams')
-    const dreams: Dream[] = stored ? JSON.parse(stored) : []
-    const found = dreams.find(d => d.share_token === token)
-    if (found) setDream(found)
-    else setNotFound(true)
+    getDreamByShareToken(token).then(found => {
+      if (found) setDream(found)
+      else setNotFound(true)
+    })
   }, [token])
 
   if (notFound) {

@@ -1,35 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
-import type { Dream } from '@/lib/types'
+import { supabase, createDream } from '@/lib/supabase'
 
 export default function NewDreamPage() {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const [saving, setSaving] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
-  function handleSave() {
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) router.replace('/login')
+      else setUserId(user.id)
+    })
+  }, [router])
+
+  async function handleSave() {
     if (!title.trim() && !body.trim()) return
+    if (!userId) return
     setSaving(true)
-
-    const dream: Dream = {
-      id: crypto.randomUUID(),
-      user_id: 'demo-user',
-      title: title || 'Untitled',
-      body,
-      analysis: null,
-      share_token: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }
-
-    const stored = localStorage.getItem('somnus_dreams')
-    const existing: Dream[] = stored ? JSON.parse(stored) : []
-    localStorage.setItem('somnus_dreams', JSON.stringify([dream, ...existing]))
-
+    const dream = await createDream(userId, title || 'Untitled', body)
     router.push(`/dream/${dream.id}`)
   }
 
@@ -45,10 +39,7 @@ export default function NewDreamPage() {
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="text-[#6b6b6b] text-sm hover:text-[#ededed] transition-colors"
-            >
+            <button onClick={() => router.back()} className="text-[#6b6b6b] text-sm hover:text-[#ededed] transition-colors">
               Cancel
             </button>
             <button
@@ -56,7 +47,7 @@ export default function NewDreamPage() {
               disabled={saving || (!title.trim() && !body.trim())}
               className="bg-[#ededed] text-[#0a0a0a] px-4 py-1.5 rounded-full text-sm font-medium hover:bg-white transition-colors disabled:opacity-40"
             >
-              Save
+              {saving ? 'Saving...' : 'Save'}
             </button>
           </div>
         </div>

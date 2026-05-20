@@ -6,6 +6,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+}
+
 export async function getDreams(userId: string): Promise<Dream[]> {
   const { data, error } = await supabase
     .from('dreams')
@@ -61,7 +66,6 @@ export async function deleteDream(id: string): Promise<void> {
 
 export async function generateShareToken(id: string): Promise<string> {
   const token = crypto.randomUUID()
-  await updateDream(id, {})
   const { error } = await supabase
     .from('dreams')
     .update({ share_token: token })

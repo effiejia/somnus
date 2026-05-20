@@ -5,10 +5,8 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import DreamCard from '@/components/DreamCard'
 import LoadingScreen from '@/components/LoadingScreen'
+import { supabase, getDreams, deleteDream } from '@/lib/supabase'
 import type { Dream } from '@/lib/types'
-
-// Placeholder user — replaced by real auth later
-const MOCK_USER_ID = 'demo-user'
 
 export default function DreamLogPage() {
   const router = useRouter()
@@ -18,39 +16,43 @@ export default function DreamLogPage() {
   const [showSplash, setShowSplash] = useState(true)
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [userId, setUserId] = useState<string | null>(null)
+  const [avatarInitial, setAvatarInitial] = useState('?')
 
   useEffect(() => {
-    // Load from localStorage until Supabase is configured
-    const stored = localStorage.getItem('somnus_dreams')
-    const data: Dream[] = stored ? JSON.parse(stored) : []
-    setDreams(data)
-    setFiltered(data)
-    setLoading(false)
-  }, [])
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/login'); return }
+      setUserId(user.id)
+      setAvatarInitial((user.email?.[0] ?? '?').toUpperCase())
+      const data = await getDreams(user.id)
+      setDreams(data)
+      setFiltered(data)
+      setLoading(false)
+    }
+    init()
+  }, [router])
 
-  function saveDreams(updated: Dream[]) {
-    localStorage.setItem('somnus_dreams', JSON.stringify(updated))
+  const handleSearch = useCallback((q: string) => {
+    if (!q.trim()) { setFiltered(dreams); return }
+    const lower = q.toLowerCase()
+    setFiltered(dreams.filter(d =>
+      d.title.toLowerCase().includes(lower) || d.body.toLowerCase().includes(lower)
+    ))
+  }, [dreams])
+
+  async function handleDelete(id: string) {
+    await deleteDream(id)
+    const updated = dreams.filter(d => d.id !== id)
     setDreams(updated)
     setFiltered(updated)
   }
 
-  const handleSearch = useCallback((q: string) => {
-    if (!q.trim()) {
-      setFiltered(dreams)
-    } else {
-      const lower = q.toLowerCase()
-      setFiltered(dreams.filter(d =>
-        d.title.toLowerCase().includes(lower) || d.body.toLowerCase().includes(lower)
-      ))
-    }
-  }, [dreams])
-
-  function handleDelete(id: string) {
-    saveDreams(dreams.filter(d => d.id !== id))
-  }
-
-  function handleDeleteSelected() {
-    saveDreams(dreams.filter(d => !selected.has(d.id)))
+  async function handleDeleteSelected() {
+    await Promise.all([...selected].map(id => deleteDream(id)))
+    const updated = dreams.filter(d => !selected.has(d.id))
+    setDreams(updated)
+    setFiltered(updated)
     setSelected(new Set())
     setSelecting(false)
   }
@@ -67,19 +69,22 @@ export default function DreamLogPage() {
     })
   }
 
-  if (showSplash) {
-    return <LoadingScreen onDone={() => setShowSplash(false)} />
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
+
+  if (showSplash) return <LoadingScreen onDone={() => setShowSplash(false)} />
+  if (loading) return <div className="min-h-screen bg-[#0a0a0a]" />
 
   const isEmpty = dreams.length === 0
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      <Navbar showSearch={!isEmpty} onSearch={handleSearch} />
+      <Navbar showSearch={!isEmpty} onSearch={handleSearch} avatarInitial={avatarInitial} onSignOut={handleSignOut} />
 
       <main className="max-w-2xl mx-auto px-0 md:px-4 pb-24">
         {isEmpty ? (
-          /* Empty state */
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-8 text-center">
             <h1 className="font-serif text-3xl text-[#ededed]">Dream log</h1>
             <p className="text-[#6b6b6b] text-sm max-w-xs">
@@ -94,19 +99,12 @@ export default function DreamLogPage() {
           </div>
         ) : (
           <>
-            {/* Header */}
             <div className="flex items-center justify-between px-4 md:px-0 py-6">
-              <div>
-                <h1 className="font-serif text-3xl text-[#ededed]">Dream log</h1>
-              </div>
+              <h1 className="font-serif text-3xl text-[#ededed]">Dream log</h1>
               <div className="flex items-center gap-3">
                 {selecting ? (
                   <>
-                    <button
-                      onClick={handleDeleteSelected}
-                      disabled={selected.size === 0}
-                      className="text-red-400 text-sm disabled:opacity-30"
-                    >
+                    <button onClick={handleDeleteSelected} disabled={selected.size === 0} className="text-red-400 text-sm disabled:opacity-30">
                       Delete ({selected.size})
                     </button>
                     <button onClick={() => { setSelecting(false); setSelected(new Set()) }} className="text-[#6b6b6b] text-sm">
@@ -116,10 +114,7 @@ export default function DreamLogPage() {
                 ) : (
                   <>
                     <span className="text-[#6b6b6b] text-sm">{dreams.length} dream{dreams.length !== 1 ? 's' : ''}</span>
-                    <button
-                      onClick={() => setSelecting(true)}
-                      className="border border-[#333] rounded-full px-3 py-1 text-sm text-[#ededed] hover:border-[#555] transition-colors"
-                    >
+                    <button onClick={() => setSelecting(true)} className="border border-[#333] rounded-full px-3 py-1 text-sm text-[#ededed] hover:border-[#555] transition-colors">
                       Select
                     </button>
                     <button className="text-[#6b6b6b]">
@@ -132,7 +127,6 @@ export default function DreamLogPage() {
               </div>
             </div>
 
-            {/* Dream list */}
             <div className="border-t border-[#1a1a1a]">
               {filtered.map(dream => (
                 <DreamCard
@@ -153,7 +147,6 @@ export default function DreamLogPage() {
         )}
       </main>
 
-      {/* FAB */}
       <button
         onClick={() => router.push('/dream/new')}
         className="fixed bottom-6 right-6 w-12 h-12 bg-[#ededed] text-[#0a0a0a] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors text-xl font-light"

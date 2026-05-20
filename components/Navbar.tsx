@@ -7,9 +7,10 @@ interface NavbarProps {
   showSearch?: boolean
   onSearch?: (q: string) => void
   avatarInitial?: string
+  onSignOut?: () => void
 }
 
-export default function Navbar({ showSearch = false, onSearch, avatarInitial = 'E' }: NavbarProps) {
+export default function Navbar({ showSearch = false, onSearch, avatarInitial = 'E', onSignOut }: NavbarProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -73,10 +74,14 @@ export default function Navbar({ showSearch = false, onSearch, avatarInitial = '
               </svg>
             </button>
           )}
-          {/* Avatar */}
-          <div className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center text-xs text-[#ededed]">
+          {/* Avatar — click to sign out */}
+          <button
+            onClick={onSignOut}
+            title="Sign out"
+            className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center text-xs text-[#ededed] hover:bg-[#333] transition-colors"
+          >
             {avatarInitial}
-          </div>
+          </button>
         </div>
       </nav>
 

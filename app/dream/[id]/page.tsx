@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import AnalysisPanel from '@/components/AnalysisPanel'
+import { getDream, updateDream, deleteDream, generateShareToken } from '@/lib/supabase'
 import type { Dream } from '@/lib/types'
 
 type AnalysisState = 'idle' | 'analyzing' | 'done'
@@ -19,7 +20,6 @@ function DecorativeDate({ iso }: { iso: string }) {
         <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.04] font-bold">{String(day).padStart(2, '0')}</span>
       </div>
       <div className="flex flex-col items-end pr-4 md:pr-0 gap-16">
-        {/* Mirrored on right side, lighter */}
         <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.025] font-bold">{String(month).padStart(2, '0')}</span>
         <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.025] font-bold">{String(day).padStart(2, '0')}</span>
       </div>
@@ -39,19 +39,16 @@ export default function DreamEntryPage() {
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem('somnus_dreams')
-    const dreams: Dream[] = stored ? JSON.parse(stored) : []
-    const found = dreams.find(d => d.id === id)
-    if (found) {
+    async function load() {
+      const found = await getDream(id)
+      if (!found) { router.replace('/'); return }
       setDream(found)
       if (found.analysis) setAnalysisState('done')
-      // Auto-trigger analyze if navigated from list Analyze button
       if (searchParams.get('analyze') === 'true' && !found.analysis) {
         setTimeout(() => runAnalysis(found), 300)
       }
-    } else {
-      router.replace('/')
     }
+    load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
@@ -65,11 +62,7 @@ export default function DreamEntryPage() {
       })
       const json = await res.json()
       const analysis: string = json.analysis ?? 'No analysis returned.'
-
-      const stored = localStorage.getItem('somnus_dreams')
-      const dreams: Dream[] = stored ? JSON.parse(stored) : []
-      const updated = dreams.map(x => x.id === d.id ? { ...x, analysis } : x)
-      localStorage.setItem('somnus_dreams', JSON.stringify(updated))
+      await updateDream(d.id, { analysis })
       setDream(prev => prev ? { ...prev, analysis } : prev)
       setAnalysisState('done')
     } catch {
@@ -80,22 +73,16 @@ export default function DreamEntryPage() {
 
   async function handleShare() {
     if (!dream) return
-    const shareToken = dream.share_token ?? crypto.randomUUID()
-    const stored = localStorage.getItem('somnus_dreams')
-    const dreams: Dream[] = stored ? JSON.parse(stored) : []
-    const updated = dreams.map(x => x.id === dream.id ? { ...x, share_token: shareToken } : x)
-    localStorage.setItem('somnus_dreams', JSON.stringify(updated))
-    setDream(prev => prev ? { ...prev, share_token: shareToken } : prev)
-    await navigator.clipboard.writeText(`${window.location.origin}/share/${shareToken}`)
+    const token = dream.share_token ?? await generateShareToken(dream.id)
+    setDream(prev => prev ? { ...prev, share_token: token } : prev)
+    await navigator.clipboard.writeText(`${window.location.origin}/share/${token}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!confirm('Delete this dream?')) return
-    const stored = localStorage.getItem('somnus_dreams')
-    const dreams: Dream[] = stored ? JSON.parse(stored) : []
-    localStorage.setItem('somnus_dreams', JSON.stringify(dreams.filter(d => d.id !== id)))
+    await deleteDream(id)
     router.replace('/')
   }
 
@@ -104,12 +91,9 @@ export default function DreamEntryPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
       <Navbar />
-
-      {/* Decorative background date */}
       <DecorativeDate iso={dream.created_at} />
 
       <main className="relative z-10 max-w-2xl mx-auto px-4 md:px-0 py-4 pb-32">
-        {/* Top bar */}
         <div className="flex items-start justify-between gap-4 mb-8">
           <div>
             <h1 className="font-serif text-3xl text-[#ededed] leading-tight">{dream.title}</h1>
@@ -121,7 +105,7 @@ export default function DreamEntryPage() {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 pt-1">
             <button
-              onClick={() => analysisState === 'idle' ? runAnalysis(dream) : undefined}
+              onClick={() => analysisState !== 'analyzing' ? runAnalysis(dream) : undefined}
               disabled={analysisState === 'analyzing'}
               className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
                 analysisState === 'analyzing'
@@ -154,13 +138,11 @@ export default function DreamEntryPage() {
           </div>
         </div>
 
-        {/* Dream body */}
         <div className="font-serif text-[#c0c0c0] text-base md:text-lg leading-relaxed space-y-6 whitespace-pre-wrap">
           {dream.body}
         </div>
       </main>
 
-      {/* Bottom bar — analyzing / view analysis states */}
       {analysisState !== 'idle' && (
         <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-center pb-6">
           <button
@@ -184,7 +166,6 @@ export default function DreamEntryPage() {
         </div>
       )}
 
-      {/* Analysis panel */}
       {showPanel && dream.analysis && (
         <AnalysisPanel analysis={dream.analysis} onClose={() => setShowPanel(false)} />
       )}
