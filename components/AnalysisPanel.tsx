@@ -34,7 +34,7 @@ export default function AnalysisPanel({ analysis, onClose }: AnalysisPanelProps)
                    animate-in slide-in-from-bottom duration-300"
       >
         <div className="flex items-center justify-between p-5 pb-4 border-b border-[#222222]">
-          <h2 className="font-serif text-lg text-[#ededed]">Analysis</h2>
+          <h2 className="font-serif font-medium text-lg text-[#ededed]">Analysis</h2>
           <button onClick={onClose} className="text-[#6b6b6b] hover:text-[#ededed] transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path d="M18 6 6 18M6 6l12 12" />
@@ -43,7 +43,7 @@ export default function AnalysisPanel({ analysis, onClose }: AnalysisPanelProps)
         </div>
 
         <div className="p-5 md:p-8 max-w-2xl mx-auto">
-          <div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif space-y-4">
+          <div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif-thin space-y-4">
             {analysis.split('\n\n').map((para, i) => (
               <p key={i}>{para}</p>
             ))}

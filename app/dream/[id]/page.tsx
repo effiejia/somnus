@@ -1,31 +1,26 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import AnalysisPanel from '@/components/AnalysisPanel'
 import { getDream, updateDream, deleteDream, generateShareToken } from '@/lib/supabase'
 import type { Dream } from '@/lib/types'
 
-type AnalysisState = 'idle' | 'analyzing' | 'done'
+const MOCK_ANALYSIS = true
 
-function DecorativeDate({ iso }: { iso: string }) {
-  const date = new Date(iso)
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  return (
-    <div className="pointer-events-none select-none absolute inset-0 flex items-center justify-between overflow-hidden">
-      <div className="flex flex-col items-start pl-4 md:pl-0 gap-16">
-        <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.04] font-bold">{String(month).padStart(2, '0')}</span>
-        <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.04] font-bold">{String(day).padStart(2, '0')}</span>
-      </div>
-      <div className="flex flex-col items-end pr-4 md:pr-0 gap-16">
-        <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.025] font-bold">{String(month).padStart(2, '0')}</span>
-        <span className="font-serif text-[18vw] md:text-[12rem] leading-none text-[#ededed]/[0.025] font-bold">{String(day).padStart(2, '0')}</span>
-      </div>
-    </div>
-  )
-}
+const MOCK_ANALYSIS_TEXT = `**Emotional tone:** Anxious undercurrent softened by moments of wonder — the dream oscillates between unease and awe.
+
+**Key symbols:**
+- *Falling water* — transition, the unconscious releasing something held for too long
+- *Unfamiliar house* — unexplored aspects of the self; rooms not yet entered
+- *The figure at the door* — an unresolved relationship or decision waiting for acknowledgement
+
+**Patterns:** This dream continues a recurring theme of threshold imagery. You are standing at edges — doorways, shorelines, the tops of staircases — without crossing them. This may reflect waking hesitation around a significant change.
+
+**Possible interpretation:** Part of you is ready to move forward; another part is still cataloguing what would be left behind. The anxiety isn't a warning — it's the feeling of momentum building.
+
+**Suggested reflection:** What would it mean to step through the door?`
 
 export default function DreamEntryPage() {
   const router = useRouter()
@@ -33,17 +28,47 @@ export default function DreamEntryPage() {
   const searchParams = useSearchParams()
   const id = params.id as string
 
-  const [dream, setDream] = useState<Dream | null>(null)
-  const [analysisState, setAnalysisState] = useState<AnalysisState>('idle')
+  const [dream, setDream] = useState<Dream | null>(() => {
+    if (typeof window === 'undefined') return null
+    try {
+      const cached = sessionStorage.getItem('somnus_dreams')
+      if (!cached) return null
+      const dreams: Dream[] = JSON.parse(cached)
+      return dreams.find(d => d.id === id) ?? null
+    } catch { return null }
+  })
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
+
+  // Sync editable fields when dream loads
+  useEffect(() => {
+    if (dream) {
+      setTitle(dream.title)
+      setBody(dream.body)
+    }
+  }, [dream?.id])
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = bodyRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = ta.scrollHeight + 'px'
+  }, [body])
 
   useEffect(() => {
     async function load() {
       const found = await getDream(id)
       if (!found) { router.replace('/'); return }
       setDream(found)
-      if (found.analysis) setAnalysisState('done')
+      setTitle(found.title)
+      setBody(found.body)
       if (searchParams.get('analyze') === 'true' && !found.analysis) {
         setTimeout(() => runAnalysis(found), 300)
       }
@@ -52,22 +77,67 @@ export default function DreamEntryPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
+  function scheduleSave(newTitle: string, newBody: string) {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(() => save(newTitle, newBody), 1000)
+  }
+
+  async function save(newTitle: string, newBody: string) {
+    if (!dream) return
+    await updateDream(dream.id, { title: newTitle, body: newBody })
+    setDream(prev => {
+      if (!prev) return prev
+      const updated = { ...prev, title: newTitle, body: newBody }
+      // Update sessionStorage cache
+      try {
+        const cached = sessionStorage.getItem('somnus_dreams')
+        if (cached) {
+          const dreams: Dream[] = JSON.parse(cached)
+          const idx = dreams.findIndex(d => d.id === dream.id)
+          if (idx !== -1) { dreams[idx] = updated; sessionStorage.setItem('somnus_dreams', JSON.stringify(dreams)) }
+        }
+      } catch { /* ignore */ }
+      return updated
+    })
+  }
+
+  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setTitle(e.target.value)
+    scheduleSave(e.target.value, body)
+  }
+
+  function handleBodyChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    setBody(e.target.value)
+    scheduleSave(title, e.target.value)
+  }
+
+  function handleBlur(newTitle: string, newBody: string) {
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    save(newTitle, newBody)
+  }
+
   const runAnalysis = useCallback(async (d: Dream) => {
-    setAnalysisState('analyzing')
+    setIsAnalyzing(true)
     try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dreamId: d.id, title: d.title, body: d.body }),
-      })
-      const json = await res.json()
-      const analysis: string = json.analysis ?? 'No analysis returned.'
-      await updateDream(d.id, { analysis })
-      setDream(prev => prev ? { ...prev, analysis } : prev)
-      setAnalysisState('done')
+      let analysis: string
+      if (MOCK_ANALYSIS) {
+        await new Promise(r => setTimeout(r, 1200))
+        analysis = MOCK_ANALYSIS_TEXT
+      } else {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dreamId: d.id, title: d.title, body: d.body }),
+        })
+        const json = await res.json()
+        analysis = json.analysis ?? 'No analysis returned.'
+      }
+      await updateDream(d.id, { analysis, analyzed_body: d.body })
+      setDream(prev => prev ? { ...prev, analysis, analyzed_body: d.body } : prev)
     } catch {
-      setAnalysisState('idle')
       alert('Analysis failed. Check your API key in .env.local.')
+    } finally {
+      setIsAnalyzing(false)
     }
   }, [])
 
@@ -88,83 +158,137 @@ export default function DreamEntryPage() {
 
   if (!dream) return null
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] relative overflow-hidden">
-      <Navbar />
-      <DecorativeDate iso={dream.created_at} />
+  const hasText = body.trim() !== ''
+  const isAnalyzed = !!dream.analysis
+  const isStale = isAnalyzed && body !== dream.analyzed_body
 
-      <main className="relative z-10 max-w-2xl mx-auto px-4 md:px-0 py-4 pb-32">
+  type ButtonMode = 'disabled' | 'analyze' | 'view' | 'analyzing'
+  const buttonMode: ButtonMode = isAnalyzing ? 'analyzing'
+    : !hasText ? 'disabled'
+    : !isAnalyzed ? 'analyze'
+    : 'view'
+
+  const BrainIcon = () => (
+    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-3.328-6.66a2.5 2.5 0 0 1 2.704-3.516l2.2.44V4.5A2.5 2.5 0 0 1 9.5 2Z" />
+      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l3.328-6.66a2.5 2.5 0 0 0-2.704-3.516l-2.2.44V4.5A2.5 2.5 0 0 0 14.5 2Z" />
+    </svg>
+  )
+
+  // Pass current body/title into runAnalysis so it uses latest edits
+  const currentDreamForAnalysis = { ...dream, title, body }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a]">
+      <Navbar />
+
+      <main className="relative z-10 max-w-3xl mx-auto px-4 md:px-0 py-4 pb-32">
         <div className="flex items-start justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-serif text-3xl text-[#ededed] leading-tight">{dream.title}</h1>
+          <div className="flex-1 min-w-0">
+            <input
+              value={title}
+              onChange={handleTitleChange}
+              onBlur={() => handleBlur(title, body)}
+              placeholder="Untitled"
+              className="font-serif font-medium text-3xl text-[#ededed] leading-tight bg-transparent border-none outline-none w-full placeholder-[#333]"
+            />
             <p className="text-[#6b6b6b] text-sm mt-1">
               {new Date(dream.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               {' at '}
               {new Date(dream.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
+
           <div className="flex items-center gap-2 flex-shrink-0 pt-1">
-            <button
-              onClick={() => analysisState !== 'analyzing' ? runAnalysis(dream) : undefined}
-              disabled={analysisState === 'analyzing'}
-              className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full transition-colors ${
-                analysisState === 'analyzing'
-                  ? 'bg-blue-600/40 text-blue-300 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-500 text-white'
-              }`}
-            >
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-3.328-6.66a2.5 2.5 0 0 1 2.704-3.516l2.2.44V4.5A2.5 2.5 0 0 1 9.5 2Z" />
-                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l3.328-6.66a2.5 2.5 0 0 0-2.704-3.516l-2.2.44V4.5A2.5 2.5 0 0 0 14.5 2Z" />
-              </svg>
-              {analysisState === 'done' ? 'Re-analyze' : 'Analyze'}
-            </button>
-            <button onClick={handleShare} className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors" title={copied ? 'Link copied!' : 'Share'}>
-              {copied ? (
-                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              ) : (
+            {buttonMode === 'disabled' && (
+              <button disabled className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-[#1a1a1a] text-[#444] cursor-not-allowed">
+                <BrainIcon />
+                Analyze
+              </button>
+            )}
+            {buttonMode === 'analyze' && (
+              <button
+                onClick={() => runAnalysis(currentDreamForAnalysis)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+              >
+                <BrainIcon />
+                Analyze
+              </button>
+            )}
+            {buttonMode === 'analyzing' && (
+              <button disabled className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-600/40 text-blue-300 cursor-not-allowed">
+                <span className="w-3 h-3 border-2 border-blue-400/40 border-t-blue-300 rounded-full animate-spin" />
+                Analyzing...
+              </button>
+            )}
+            {buttonMode === 'view' && (
+              <button
+                onClick={() => setShowPanel(true)}
+                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[#333] text-[#ededed] hover:border-[#555] transition-colors"
+              >
+                <BrainIcon />
+                View analysis
+              </button>
+            )}
+
+            {/* Re-analyze icon — only when stale */}
+            {isStale && !isAnalyzing && (
+              <div className="relative group">
+                <button
+                  onClick={() => runAnalysis(currentDreamForAnalysis)}
+                  className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                </button>
+                <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                  Re-analyze
+                </span>
+              </div>
+            )}
+
+            <div className="relative group">
+              <button onClick={handleShare} className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors">
+                {copied ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
+                  </svg>
+                )}
+              </button>
+              <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                {copied ? 'Copied!' : 'Share'}
+              </span>
+            </div>
+
+            <div className="relative group">
+              <button onClick={handleDelete} className="text-[#6b6b6b] hover:text-red-400 p-1 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
                 </svg>
-              )}
-            </button>
-            <button onClick={handleDelete} className="text-[#6b6b6b] hover:text-red-400 p-1 transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-              </svg>
-            </button>
+              </button>
+              <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+                Delete
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="font-serif text-[#c0c0c0] text-base md:text-lg leading-relaxed space-y-6 whitespace-pre-wrap">
-          {dream.body}
-        </div>
+        <textarea
+          ref={bodyRef}
+          value={body}
+          onChange={handleBodyChange}
+          onBlur={() => handleBlur(title, body)}
+          placeholder="Write your dream..."
+          rows={1}
+          className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#333] break-words"
+        />
       </main>
-
-      {analysisState !== 'idle' && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-center pb-6">
-          <button
-            onClick={() => analysisState === 'done' ? setShowPanel(true) : undefined}
-            disabled={analysisState === 'analyzing'}
-            className={`flex items-center gap-3 px-8 py-3 rounded-full text-sm font-medium transition-all shadow-2xl ${
-              analysisState === 'analyzing'
-                ? 'bg-[#1a1a1a] border border-[#333] text-[#6b6b6b] cursor-not-allowed'
-                : 'bg-[#1a1a1a] border border-[#333] text-[#ededed] hover:border-[#555]'
-            }`}
-          >
-            {analysisState === 'analyzing' ? (
-              <>
-                <span className="w-4 h-4 border-2 border-[#555] border-t-[#ededed] rounded-full animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'View analysis'
-            )}
-          </button>
-        </div>
-      )}
 
       {showPanel && dream.analysis && (
         <AnalysisPanel analysis={dream.analysis} onClose={() => setShowPanel(false)} />

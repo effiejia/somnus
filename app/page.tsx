@@ -10,24 +10,51 @@ import type { Dream } from '@/lib/types'
 
 export default function DreamLogPage() {
   const router = useRouter()
-  const [dreams, setDreams] = useState<Dream[]>([])
-  const [filtered, setFiltered] = useState<Dream[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showSplash, setShowSplash] = useState(true)
+  const [dreams, setDreams] = useState<Dream[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const cached = sessionStorage.getItem('somnus_dreams')
+      return cached ? JSON.parse(cached) : []
+    } catch { return [] }
+  })
+  const [filtered, setFiltered] = useState<Dream[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const cached = sessionStorage.getItem('somnus_dreams')
+      return cached ? JSON.parse(cached) : []
+    } catch { return [] }
+  })
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return !sessionStorage.getItem('somnus_dreams')
+  })
+  const [showSplash, setShowSplash] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [userId, setUserId] = useState<string | null>(null)
-  const [avatarInitial, setAvatarInitial] = useState('?')
+  const [avatarInitial, setAvatarInitial] = useState(() => {
+    if (typeof window === 'undefined') return '?'
+    return sessionStorage.getItem('somnus_avatar') ?? '?'
+  })
+
+  useEffect(() => {
+    if (!sessionStorage.getItem('somnus_splash_seen')) {
+      setShowSplash(true)
+    }
+  }, [])
 
   useEffect(() => {
     async function init() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
       setUserId(user.id)
-      setAvatarInitial((user.email?.[0] ?? '?').toUpperCase())
+      const initial = (user.email?.[0] ?? '?').toUpperCase()
+      setAvatarInitial(initial)
+      sessionStorage.setItem('somnus_avatar', initial)
       const data = await getDreams(user.id)
       setDreams(data)
       setFiltered(data)
+      sessionStorage.setItem('somnus_dreams', JSON.stringify(data))
       setLoading(false)
     }
     init()
@@ -74,7 +101,7 @@ export default function DreamLogPage() {
     router.push('/login')
   }
 
-  if (showSplash) return <LoadingScreen onDone={() => setShowSplash(false)} />
+  if (showSplash) return <LoadingScreen onDone={() => { sessionStorage.setItem('somnus_splash_seen', '1'); setShowSplash(false) }} />
   if (loading) return <div className="min-h-screen bg-[#0a0a0a]" />
 
   const isEmpty = dreams.length === 0
@@ -83,10 +110,10 @@ export default function DreamLogPage() {
     <div className="min-h-screen bg-[#0a0a0a]">
       <Navbar showSearch={!isEmpty} onSearch={handleSearch} avatarInitial={avatarInitial} onSignOut={handleSignOut} />
 
-      <main className="max-w-2xl mx-auto px-0 md:px-4 pb-24">
+      <main className="max-w-3xl mx-auto px-4 md:px-0 pb-24">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-8 text-center">
-            <h1 className="font-serif text-3xl text-[#ededed]">Dream log</h1>
+            <h1 className="font-serif font-medium text-3xl text-[#ededed]">Dream log</h1>
             <p className="text-[#6b6b6b] text-sm max-w-xs">
               You haven&apos;t recorded any dreams yet. Tap the button below to begin.
             </p>
@@ -99,8 +126,8 @@ export default function DreamLogPage() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between px-4 md:px-0 py-6">
-              <h1 className="font-serif text-3xl text-[#ededed]">Dream log</h1>
+            <div className="flex items-center justify-between py-6">
+              <h1 className="font-serif font-medium text-3xl text-[#ededed]">Dream log</h1>
               <div className="flex items-center gap-3">
                 {selecting ? (
                   <>

@@ -51,7 +51,7 @@ export async function createDream(userId: string, title: string, body: string): 
   return data
 }
 
-export async function updateDream(id: string, fields: { title?: string; body?: string; analysis?: string }): Promise<void> {
+export async function updateDream(id: string, fields: { title?: string; body?: string; analysis?: string; analyzed_body?: string }): Promise<void> {
   const { error } = await supabase
     .from('dreams')
     .update({ ...fields, updated_at: new Date().toISOString() })

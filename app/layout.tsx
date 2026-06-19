@@ -1,6 +1,28 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
+import localFont from 'next/font/local'
 import './globals.css'
+
+const ppEiko = localFont({
+  src: [
+    { path: '../public/fonts/PPEiko-Medium.otf', weight: '500', style: 'normal' },
+    { path: '../public/fonts/PPEiko-LightItalic.otf', weight: '300', style: 'italic' },
+  ],
+  variable: '--font-serif',
+})
+
+const ppEikoThin = localFont({
+  src: [{ path: '../public/fonts/PPEiko-Thin.otf', weight: '400', style: 'normal' }],
+  variable: '--font-serif-thin',
+})
+
+const ppNeueMontreal = localFont({
+  src: [
+    { path: '../public/fonts/PPNeueMontreal-Book.otf', weight: '400', style: 'normal' },
+    { path: '../public/fonts/PPNeueMontreal-Medium.otf', weight: '500', style: 'normal' },
+    { path: '../public/fonts/PPNeueMontreal-Italic.otf', weight: '400', style: 'italic' },
+  ],
+  variable: '--font-sans',
+})
 
 export const metadata: Metadata = {
   title: 'Somnus',
@@ -9,20 +31,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${ppEiko.variable} ${ppEikoThin.variable} ${ppNeueMontreal.variable}`}>
       <body className="min-h-screen bg-[#0a0a0a] text-[#ededed] antialiased">
         {children}
-        <Script
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              var l = document.createElement('link');
-              l.rel = 'stylesheet';
-              l.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap';
-              document.head.appendChild(l);
-            `
-          }}
-        />
       </body>
     </html>
   )

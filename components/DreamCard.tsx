@@ -51,7 +51,7 @@ export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selec
             {selecting && (
               <div className={`w-4 h-4 rounded-full border flex-shrink-0 ${selected ? 'bg-blue-500 border-blue-500' : 'border-[#444]'}`} />
             )}
-            <h3 className="font-serif text-[#ededed] text-base leading-snug truncate">
+            <h3 className="font-serif font-medium text-[#ededed] text-base leading-snug truncate">
               {dream.title || 'Untitled'}
             </h3>
           </div>
