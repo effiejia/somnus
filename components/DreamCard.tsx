@@ -6,7 +6,7 @@ import { RefreshIcon, ShareIcon, DeleteIcon } from '@/components/icons'
 import ShareModal from '@/components/ShareModal'
 import type { Dream } from '@/lib/types'
 
-function formatRelativeDate(iso: string): string {
+export function formatRelativeDate(iso: string): string {
   const date = new Date(iso)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()

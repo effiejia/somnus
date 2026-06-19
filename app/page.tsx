@@ -3,10 +3,52 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
-import DreamCard from '@/components/DreamCard'
+import DreamCard, { formatRelativeDate } from '@/components/DreamCard'
+import { DeleteIcon } from '@/components/icons'
 import LoadingScreen from '@/components/LoadingScreen'
 import { supabase, getDreams, deleteDream, getSharedWithMe, removeSharedWithMe } from '@/lib/supabase'
 import type { Dream, SharedDream } from '@/lib/types'
+
+const MOCK_SHARED = true
+
+const MOCK_SHARED_ENTRIES: SharedDream[] = [
+  {
+    id: 'mock-shared-1',
+    viewer_id: 'mock-viewer',
+    dream_id: 'mock-dream-1',
+    sharer_email: 'afoyer@example.com',
+    saved_at: new Date().toISOString(),
+    dream: {
+      id: 'mock-dream-1',
+      user_id: 'mock-user',
+      title: 'The glass hallway',
+      body: 'I was walking through a hallway made entirely of glass. Each panel reflected a different version of me — some younger, some I didn\'t recognise at all.',
+      analysis: null,
+      analyzed_body: null,
+      share_token: 'mock-token-1',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
+      updated_at: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
+    },
+  },
+  {
+    id: 'mock-shared-2',
+    viewer_id: 'mock-viewer',
+    dream_id: 'mock-dream-2',
+    sharer_email: 'afoyer@example.com',
+    saved_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+    dream: {
+      id: 'mock-dream-2',
+      user_id: 'mock-user',
+      title: 'Running through the airport',
+      body: 'Late for a flight I couldn\'t find on the departures board. Every gate number I reached turned into a different one.',
+      analysis: '**Emotional tone:** High anxiety with an undercurrent of helplessness.\n\n**Key symbols:**\n- *The airport* — transition, anticipation of change\n- *Missing gate* — fear of missing an opportunity\n\n**Possible interpretation:** A deadline or decision is weighing on you.',
+      analyzed_body: 'Late for a flight I couldn\'t find on the departures board.',
+      share_token: 'mock-token-2',
+      created_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+      updated_at: new Date(Date.now() - 1000 * 60 * 60 * 36).toISOString(),
+    },
+  },
+]
 
 export default function DreamLogPage() {
   const router = useRouter()
@@ -58,7 +100,7 @@ export default function DreamLogPage() {
       setFiltered(data)
       sessionStorage.setItem('somnus_dreams', JSON.stringify(data))
       const shared = await getSharedWithMe(user.id)
-      setSharedWithMe(shared)
+      setSharedWithMe(MOCK_SHARED ? [...MOCK_SHARED_ENTRIES, ...shared] : shared)
       setLoading(false)
     }
     init()
@@ -192,7 +234,7 @@ export default function DreamLogPage() {
             </div>
 
             {tab === 'my' && (
-              <div className="border-b border-[#1a1a1a]">
+              <div>
                 {filtered.map(dream => (
                   <DreamCard
                     key={dream.id}
@@ -213,25 +255,35 @@ export default function DreamLogPage() {
             )}
 
             {tab === 'shared' && (
-              <div className="border-b border-[#1a1a1a]">
+              <div>
                 {sharedWithMe.length === 0 ? (
                   <p className="text-center text-[#6b6b6b] text-sm py-16">No dreams have been shared with you yet.</p>
                 ) : (
                   sharedWithMe.map(entry => (
                     <div
                       key={entry.id}
-                      onClick={() => window.open(`/share/${entry.dream.share_token}`, '_blank')}
+                      onClick={() => {
+                        if (MOCK_SHARED && entry.id.startsWith('mock-')) {
+                          sessionStorage.setItem('somnus_mock_shared_dream', JSON.stringify(entry.dream))
+                        }
+                        router.push(`/share/${entry.dream.share_token}`)
+                      }}
                       className="group/card relative border-b border-[#1a1a1a] px-4 py-4 cursor-pointer transition-colors hover:bg-[#111111] md:hover:bg-transparent"
                     >
-                      <div className="flex items-start justify-between gap-16">
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-serif font-medium text-[#ededed] text-base leading-snug truncate mb-1">
-                            {entry.dream.title || 'Untitled'}
-                          </h3>
-                          <p className="text-[#6b6b6b] text-sm leading-snug truncate">
-                            <span className="text-[#444]">{entry.sharer_email}</span>
-                            {entry.dream.body && <>{' · '}{entry.dream.body}</>}
-                          </p>
+                      <div className="flex items-center justify-between gap-16">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <div className="w-8 h-8 rounded-full bg-[#222] flex items-center justify-center flex-shrink-0 text-xs text-[#ededed] uppercase">
+                            {entry.sharer_email[0]}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-serif font-medium text-[#ededed] text-base leading-snug truncate mb-1">
+                              {entry.dream.title || 'Untitled'}
+                            </h3>
+                            <p className="text-[#6b6b6b] text-sm leading-snug truncate">
+                              <span className="text-[#444]">{formatRelativeDate(entry.dream.created_at)}</span>
+                              {entry.dream.body && <>{' · '}{entry.dream.body}</>}
+                            </p>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity flex-shrink-0">
                           <div className="relative group/btn">
@@ -240,9 +292,7 @@ export default function DreamLogPage() {
                               className="text-[#6b6b6b] hover:text-[#888] p-1 transition-colors"
                               aria-label="Remove"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                <path d="M18 6 6 18M6 6l12 12" />
-                              </svg>
+                              <DeleteIcon className="w-4 h-4" />
                             </button>
                             <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
                               Remove
