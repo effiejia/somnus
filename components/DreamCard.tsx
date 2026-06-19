@@ -45,7 +45,7 @@ export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selec
         selected ? 'bg-[#111111]' : ''
       }`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-16">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
             {selecting && (
@@ -55,9 +55,9 @@ export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selec
               {dream.title || 'Untitled'}
             </h3>
           </div>
-          <p className="text-[#6b6b6b] text-sm leading-snug line-clamp-1">
+          <p className="text-[#6b6b6b] text-sm leading-snug truncate">
             <span className="text-[#444]">{formatRelativeDate(dream.created_at)}</span>
-            {dream.body && <> &bull; {dream.body}</>}
+            {dream.body && <>{' · '}{dream.body}</>}
           </p>
         </div>
 

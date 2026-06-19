@@ -196,6 +196,16 @@ export default function DreamEntryPage() {
               {new Date(dream.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               {' at '}
               {new Date(dream.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {(new Date(dream.updated_at).getTime() - new Date(dream.created_at).getTime() > 300_000) && (
+                <>
+                  {' · Edited '}
+                  {new Date(dream.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) !==
+                   new Date(dream.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                    ? new Date(dream.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) + ' at '
+                    : 'at '}
+                  {new Date(dream.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </>
+              )}
             </p>
           </div>
 

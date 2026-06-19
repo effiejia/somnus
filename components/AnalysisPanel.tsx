@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import ReactMarkdown from 'react-markdown'
 
 interface AnalysisPanelProps {
   analysis: string
@@ -29,11 +30,11 @@ export default function AnalysisPanel({ analysis, onClose }: AnalysisPanelProps)
       {/* Panel — slides up from bottom, covers ~80% on mobile, fixed height on desktop */}
       <div
         ref={panelRef}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-[#111111] border border-[#222222] rounded-t-2xl
+        className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-3xl z-50 bg-[#111111] border border-[#222222] rounded-t-2xl
                    max-h-[80vh] md:max-h-[60vh] overflow-y-auto
                    animate-in slide-in-from-bottom duration-300"
       >
-        <div className="flex items-center justify-between p-5 pb-4 border-b border-[#222222]">
+        <div className="sticky top-0 z-10 bg-[#111111] flex items-center justify-between p-5 pb-4 border-b border-[#222222]">
           <h2 className="font-serif font-medium text-lg text-[#ededed]">Analysis</h2>
           <button onClick={onClose} className="text-[#6b6b6b] hover:text-[#ededed] transition-colors">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -42,11 +43,9 @@ export default function AnalysisPanel({ analysis, onClose }: AnalysisPanelProps)
           </button>
         </div>
 
-        <div className="p-5 md:p-8 max-w-2xl mx-auto">
-          <div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif-thin space-y-4">
-            {analysis.split('\n\n').map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
+        <div className="p-5 md:p-8">
+          <div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif-thin space-y-4 [&_strong]:text-[#ededed] [&_strong]:font-medium [&_em]:italic [&_ul]:space-y-2 [&_li]:ml-4 [&_li]:list-disc">
+            <ReactMarkdown>{analysis}</ReactMarkdown>
           </div>
         </div>
       </div>
