@@ -12,3 +12,12 @@ export interface Dream {
 
 export type DreamInsert = Pick<Dream, 'title' | 'body'>
 export type DreamUpdate = Partial<Pick<Dream, 'title' | 'body' | 'analysis' | 'analyzed_body'>>
+
+export interface SharedDream {
+  id: string
+  viewer_id: string
+  dream_id: string
+  sharer_email: string
+  saved_at: string
+  dream: Dream
+}

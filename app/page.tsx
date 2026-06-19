@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import DreamCard from '@/components/DreamCard'
 import LoadingScreen from '@/components/LoadingScreen'
-import { supabase, getDreams, deleteDream } from '@/lib/supabase'
-import type { Dream } from '@/lib/types'
+import { supabase, getDreams, deleteDream, getSharedWithMe, removeSharedWithMe } from '@/lib/supabase'
+import type { Dream, SharedDream } from '@/lib/types'
 
 export default function DreamLogPage() {
   const router = useRouter()
@@ -32,6 +32,8 @@ export default function DreamLogPage() {
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [userId, setUserId] = useState<string | null>(null)
+  const [tab, setTab] = useState<'my' | 'shared'>('my')
+  const [sharedWithMe, setSharedWithMe] = useState<SharedDream[]>([])
   const [avatarInitial, setAvatarInitial] = useState(() => {
     if (typeof window === 'undefined') return '?'
     return sessionStorage.getItem('somnus_avatar') ?? '?'
@@ -55,6 +57,8 @@ export default function DreamLogPage() {
       setDreams(data)
       setFiltered(data)
       sessionStorage.setItem('somnus_dreams', JSON.stringify(data))
+      const shared = await getSharedWithMe(user.id)
+      setSharedWithMe(shared)
       setLoading(false)
     }
     init()
@@ -90,6 +94,17 @@ export default function DreamLogPage() {
 
   function handleViewAnalysis(dream: Dream) {
     router.push(`/dream/${dream.id}?view=true`)
+  }
+
+  async function handleRemoveShared(dreamId: string) {
+    await removeSharedWithMe(dreamId)
+    setSharedWithMe(prev => prev.filter(s => s.dream_id !== dreamId))
+  }
+
+  function handleTokenChange(id: string, token: string | null) {
+    const update = (list: Dream[]) => list.map(d => d.id === id ? { ...d, share_token: token } : d)
+    setDreams(prev => update(prev))
+    setFiltered(prev => update(prev))
   }
 
   function toggleSelect(id: string) {
@@ -133,48 +148,113 @@ export default function DreamLogPage() {
             <div className="flex items-center justify-between py-6">
               <h1 className="font-serif font-medium text-3xl text-[#ededed]">Dream log</h1>
               <div className="flex items-center gap-3">
-                {selecting ? (
-                  <>
-                    <button onClick={handleDeleteSelected} disabled={selected.size === 0} className="text-red-400 text-sm disabled:opacity-30">
-                      Delete ({selected.size})
-                    </button>
-                    <button onClick={() => { setSelecting(false); setSelected(new Set()) }} className="text-[#6b6b6b] text-sm">
-                      Cancel
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[#6b6b6b] text-sm">{dreams.length} dream{dreams.length !== 1 ? 's' : ''}</span>
-                    <button onClick={() => setSelecting(true)} className="border border-[#333] rounded-full px-3 py-1 text-sm text-[#ededed] hover:border-[#555] transition-colors">
-                      Select
-                    </button>
-                    <button className="text-[#6b6b6b]">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                    </button>
-                  </>
+                {tab === 'my' && (
+                  selecting ? (
+                    <>
+                      <button onClick={handleDeleteSelected} disabled={selected.size === 0} className="text-red-400 text-sm disabled:opacity-30">
+                        Delete ({selected.size})
+                      </button>
+                      <button onClick={() => { setSelecting(false); setSelected(new Set()) }} className="text-[#6b6b6b] text-sm">
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[#6b6b6b] text-sm">{dreams.length} dream{dreams.length !== 1 ? 's' : ''}</span>
+                      <button onClick={() => setSelecting(true)} className="border border-[#333] rounded-full px-3 py-1 text-sm text-[#ededed] hover:border-[#555] transition-colors">
+                        Select
+                      </button>
+                    </>
+                  )
                 )}
               </div>
             </div>
 
-            <div className="border-t border-[#1a1a1a]">
-              {filtered.map(dream => (
-                <DreamCard
-                  key={dream.id}
-                  dream={dream}
-                  onAnalyze={handleAnalyze}
-                  onViewAnalysis={handleViewAnalysis}
-                  onDelete={handleDelete}
-                  selecting={selecting}
-                  selected={selected.has(dream.id)}
-                  onToggleSelect={toggleSelect}
-                />
-              ))}
-              {filtered.length === 0 && (
-                <p className="text-center text-[#6b6b6b] text-sm py-16">No results</p>
-              )}
+            {/* Tab strip */}
+            <div className="flex gap-4 border-b border-[#1a1a1a] mb-0">
+              <button
+                onClick={() => { setTab('my'); setSelecting(false); setSelected(new Set()) }}
+                className={`pb-3 text-sm transition-colors ${tab === 'my' ? 'text-[#ededed] border-b-2 border-[#ededed] -mb-px' : 'text-[#555] hover:text-[#888]'}`}
+              >
+                My dreams
+              </button>
+              <button
+                onClick={() => { setTab('shared'); setSelecting(false); setSelected(new Set()) }}
+                className={`pb-3 text-sm transition-colors flex items-center gap-1.5 ${tab === 'shared' ? 'text-[#ededed] border-b-2 border-[#ededed] -mb-px' : 'text-[#555] hover:text-[#888]'}`}
+              >
+                Shared with you
+                {sharedWithMe.length > 0 && (
+                  <span className={`text-xs rounded-full px-1.5 py-0.5 ${tab === 'shared' ? 'bg-[#222] text-[#888]' : 'bg-[#1a1a1a] text-[#555]'}`}>
+                    {sharedWithMe.length}
+                  </span>
+                )}
+              </button>
             </div>
+
+            {tab === 'my' && (
+              <div className="border-b border-[#1a1a1a]">
+                {filtered.map(dream => (
+                  <DreamCard
+                    key={dream.id}
+                    dream={dream}
+                    onAnalyze={handleAnalyze}
+                    onViewAnalysis={handleViewAnalysis}
+                    onDelete={handleDelete}
+                    onTokenChange={handleTokenChange}
+                    selecting={selecting}
+                    selected={selected.has(dream.id)}
+                    onToggleSelect={toggleSelect}
+                  />
+                ))}
+                {filtered.length === 0 && (
+                  <p className="text-center text-[#6b6b6b] text-sm py-16">No results</p>
+                )}
+              </div>
+            )}
+
+            {tab === 'shared' && (
+              <div className="border-b border-[#1a1a1a]">
+                {sharedWithMe.length === 0 ? (
+                  <p className="text-center text-[#6b6b6b] text-sm py-16">No dreams have been shared with you yet.</p>
+                ) : (
+                  sharedWithMe.map(entry => (
+                    <div
+                      key={entry.id}
+                      onClick={() => window.open(`/share/${entry.dream.share_token}`, '_blank')}
+                      className="group/card relative border-b border-[#1a1a1a] px-4 py-4 cursor-pointer transition-colors hover:bg-[#111111] md:hover:bg-transparent"
+                    >
+                      <div className="flex items-start justify-between gap-16">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif font-medium text-[#ededed] text-base leading-snug truncate mb-1">
+                            {entry.dream.title || 'Untitled'}
+                          </h3>
+                          <p className="text-[#6b6b6b] text-sm leading-snug truncate">
+                            <span className="text-[#444]">{entry.sharer_email}</span>
+                            {entry.dream.body && <>{' · '}{entry.dream.body}</>}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity flex-shrink-0">
+                          <div className="relative group/btn">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleRemoveShared(entry.dream_id) }}
+                              className="text-[#6b6b6b] hover:text-[#888] p-1 transition-colors"
+                              aria-label="Remove"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path d="M18 6 6 18M6 6l12 12" />
+                              </svg>
+                            </button>
+                            <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                              Remove
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </>
         )}
       </main>

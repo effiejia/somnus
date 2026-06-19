@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import AnalysisPanel from '@/components/AnalysisPanel'
-import { getDream, updateDream, deleteDream, generateShareToken } from '@/lib/supabase'
+import { getDream, updateDream, deleteDream } from '@/lib/supabase'
+import { RefreshIcon, ShareIcon, DeleteIcon } from '@/components/icons'
+import ShareModal from '@/components/ShareModal'
 import type { Dream } from '@/lib/types'
 
 const MOCK_ANALYSIS = true
@@ -41,7 +43,7 @@ export default function DreamEntryPage() {
   const [body, setBody] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showPanel, setShowPanel] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
 
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -144,15 +146,6 @@ export default function DreamEntryPage() {
     }
   }, [])
 
-  async function handleShare() {
-    if (!dream) return
-    const token = dream.share_token ?? await generateShareToken(dream.id)
-    setDream(prev => prev ? { ...prev, share_token: token } : prev)
-    await navigator.clipboard.writeText(`${window.location.origin}/share/${token}`)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   async function handleDelete() {
     if (!confirm('Delete this dream?')) return
     await deleteDream(id)
@@ -241,10 +234,7 @@ export default function DreamEntryPage() {
                   onClick={() => runAnalysis(currentDreamForAnalysis)}
                   className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                    <path d="M3 3v5h5" />
-                  </svg>
+                  <RefreshIcon className="w-4 h-4" />
                 </button>
                 <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                   Re-analyze
@@ -253,27 +243,17 @@ export default function DreamEntryPage() {
             )}
 
             <div className="relative group">
-              <button onClick={handleShare} className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors">
-                {copied ? (
-                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path d="M20 6 9 17l-5-5" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
-                  </svg>
-                )}
+              <button onClick={() => setShowShareModal(true)} className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors">
+                <ShareIcon className="w-4 h-4" />
               </button>
               <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                {copied ? 'Copied!' : 'Share'}
+                Share
               </span>
             </div>
 
             <div className="relative group">
               <button onClick={handleDelete} className="text-[#6b6b6b] hover:text-red-400 p-1 transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-                </svg>
+                <DeleteIcon className="w-4 h-4" />
               </button>
               <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
                 Delete
@@ -295,6 +275,14 @@ export default function DreamEntryPage() {
 
       {showPanel && dream.analysis && (
         <AnalysisPanel analysis={dream.analysis} onClose={() => setShowPanel(false)} />
+      )}
+
+      {showShareModal && (
+        <ShareModal
+          dream={dream}
+          onClose={() => setShowShareModal(false)}
+          onTokenChange={(token) => setDream(prev => prev ? { ...prev, share_token: token } : prev)}
+        />
       )}
     </div>
   )
