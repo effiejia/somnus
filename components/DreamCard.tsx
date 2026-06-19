@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { generateShareToken } from '@/lib/supabase'
 import type { Dream } from '@/lib/types'
 
 function formatRelativeDate(iso: string): string {
@@ -18,17 +20,31 @@ function formatRelativeDate(iso: string): string {
   return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
+
 interface DreamCardProps {
   dream: Dream
   onAnalyze: (dream: Dream) => void
+  onViewAnalysis: (dream: Dream) => void
   onDelete: (id: string) => void
   selecting: boolean
   selected: boolean
   onToggleSelect: (id: string) => void
 }
 
-export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selected, onToggleSelect }: DreamCardProps) {
+export default function DreamCard({ dream, onAnalyze, onViewAnalysis, onDelete, selecting, selected, onToggleSelect }: DreamCardProps) {
   const router = useRouter()
+  const [copied, setCopied] = useState(false)
+
+  const isAnalyzed = !!dream.analysis
+  const isStale = isAnalyzed && dream.body !== dream.analyzed_body
+
+  async function handleShare(e: React.MouseEvent) {
+    e.stopPropagation()
+    const token = dream.share_token ?? await generateShareToken(dream.id)
+    await navigator.clipboard.writeText(`${window.location.origin}/share/${token}`)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   function handleClick() {
     if (selecting) {
@@ -41,7 +57,7 @@ export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selec
   return (
     <div
       onClick={handleClick}
-      className={`group relative border-b border-[#1a1a1a] px-4 md:px-0 py-4 cursor-pointer transition-colors hover:bg-[#111111] md:hover:bg-transparent ${
+      className={`group/card relative border-b border-[#1a1a1a] py-4 cursor-pointer transition-colors hover:bg-[#111111] md:hover:bg-transparent ${selecting ? 'px-4' : ''} ${
         selected ? 'bg-[#111111]' : ''
       }`}
     >
@@ -63,26 +79,70 @@ export default function DreamCard({ dream, onAnalyze, onDelete, selecting, selec
 
         {/* Action buttons — visible on hover (desktop) or always on mobile */}
         {!selecting && (
-          <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex-shrink-0">
-            <button
-              onClick={(e) => { e.stopPropagation(); onAnalyze(dream) }}
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
-            >
-              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-3.328-6.66a2.5 2.5 0 0 1 2.704-3.516l2.2.44V4.5A2.5 2.5 0 0 1 9.5 2Z" />
-                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l3.328-6.66a2.5 2.5 0 0 0-2.704-3.516l-2.2.44V4.5A2.5 2.5 0 0 0 14.5 2Z" />
-              </svg>
-              Analyze
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(dream.id) }}
-              className="text-[#444] hover:text-[#888] p-1 transition-colors"
-              aria-label="Delete"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-              </svg>
-            </button>
+          <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity flex-shrink-0">
+            {!isAnalyzed && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onAnalyze(dream) }}
+                className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 py-1 rounded-full transition-colors"
+              >
+                Analyze
+              </button>
+            )}
+            {isAnalyzed && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onViewAnalysis(dream) }}
+                  className="border border-[#333] hover:border-[#555] text-[#ededed] text-sm px-3 py-1 rounded-full transition-colors"
+                >
+                  View analysis
+                </button>
+                {isStale && (
+                  <div className="relative group/btn">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onAnalyze(dream) }}
+                      className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                        <path d="M3 3v5h5" />
+                      </svg>
+                    </button>
+                    <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                      Re-analyze
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+            <div className="relative group/btn">
+              <button onClick={handleShare} className="text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors">
+                {copied ? (
+                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13" />
+                  </svg>
+                )}
+              </button>
+              <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                {copied ? 'Copied!' : 'Share'}
+              </span>
+            </div>
+            <div className="relative group/btn">
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(dream.id) }}
+                className="text-[#444] hover:text-[#888] p-1 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                </svg>
+              </button>
+              <span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+                Delete
+              </span>
+            </div>
           </div>
         )}
       </div>

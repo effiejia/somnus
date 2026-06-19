@@ -72,6 +72,9 @@ export default function DreamEntryPage() {
       if (searchParams.get('analyze') === 'true' && !found.analysis) {
         setTimeout(() => runAnalysis(found), 300)
       }
+      if (searchParams.get('view') === 'true' && found.analysis) {
+        setShowPanel(true)
+      }
     }
     load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,13 +171,6 @@ export default function DreamEntryPage() {
     : !isAnalyzed ? 'analyze'
     : 'view'
 
-  const BrainIcon = () => (
-    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44l-3.328-6.66a2.5 2.5 0 0 1 2.704-3.516l2.2.44V4.5A2.5 2.5 0 0 1 9.5 2Z" />
-      <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44l3.328-6.66a2.5 2.5 0 0 0-2.704-3.516l-2.2.44V4.5A2.5 2.5 0 0 0 14.5 2Z" />
-    </svg>
-  )
-
   // Pass current body/title into runAnalysis so it uses latest edits
   const currentDreamForAnalysis = { ...dream, title, body }
 
@@ -211,22 +207,20 @@ export default function DreamEntryPage() {
 
           <div className="flex items-center gap-2 flex-shrink-0 pt-1">
             {buttonMode === 'disabled' && (
-              <button disabled className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-[#1a1a1a] text-[#444] cursor-not-allowed">
-                <BrainIcon />
+              <button disabled className="text-sm px-3 py-1 rounded-full bg-[#1a1a1a] text-[#444] cursor-not-allowed">
                 Analyze
               </button>
             )}
             {buttonMode === 'analyze' && (
               <button
                 onClick={() => runAnalysis(currentDreamForAnalysis)}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                className="text-sm px-3 py-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
               >
-                <BrainIcon />
                 Analyze
               </button>
             )}
             {buttonMode === 'analyzing' && (
-              <button disabled className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full bg-blue-600/40 text-blue-300 cursor-not-allowed">
+              <button disabled className="flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-blue-600/40 text-blue-300 cursor-not-allowed">
                 <span className="w-3 h-3 border-2 border-blue-400/40 border-t-blue-300 rounded-full animate-spin" />
                 Analyzing...
               </button>
@@ -234,9 +228,8 @@ export default function DreamEntryPage() {
             {buttonMode === 'view' && (
               <button
                 onClick={() => setShowPanel(true)}
-                className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-[#333] text-[#ededed] hover:border-[#555] transition-colors"
+                className="text-sm px-3 py-1 rounded-full border border-[#333] text-[#ededed] hover:border-[#555] transition-colors"
               >
-                <BrainIcon />
                 View analysis
               </button>
             )}

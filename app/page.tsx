@@ -88,6 +88,10 @@ export default function DreamLogPage() {
     router.push(`/dream/${dream.id}?analyze=true`)
   }
 
+  function handleViewAnalysis(dream: Dream) {
+    router.push(`/dream/${dream.id}?view=true`)
+  }
+
   function toggleSelect(id: string) {
     setSelected(prev => {
       const next = new Set(prev)
@@ -160,6 +164,7 @@ export default function DreamLogPage() {
                   key={dream.id}
                   dream={dream}
                   onAnalyze={handleAnalyze}
+                  onViewAnalysis={handleViewAnalysis}
                   onDelete={handleDelete}
                   selecting={selecting}
                   selected={selected.has(dream.id)}
@@ -180,6 +185,7 @@ export default function DreamLogPage() {
       >
         +
       </button>
+
     </div>
   )
 }
