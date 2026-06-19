@@ -16,17 +16,23 @@ export default function ShareModal({ dream, onClose, onTokenChange }: ShareModal
   const [isClosing, setIsClosing] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isRemoving, setIsRemoving] = useState(false)
+  const [generateError, setGenerateError] = useState(false)
 
   const shareUrl = token ? `${window.location.origin}/share/${token}` : null
 
   useEffect(() => {
     if (!token) {
       setIsGenerating(true)
-      generateShareToken(dream.id).then(t => {
-        setToken(t)
-        onTokenChange(t)
-        setIsGenerating(false)
-      })
+      generateShareToken(dream.id)
+        .then(t => {
+          setToken(t)
+          onTokenChange(t)
+        })
+        .catch(err => {
+          console.error('Failed to generate share token:', err)
+          setGenerateError(true)
+        })
+        .finally(() => setIsGenerating(false))
     }
   }, [])
 
@@ -70,11 +76,12 @@ export default function ShareModal({ dream, onClose, onTokenChange }: ShareModal
       {/* Backdrop */}
       <div
         className={`fixed inset-0 z-40 bg-black/60 backdrop-blur-sm ${isClosing ? 'animate-out fade-out duration-250' : 'animate-in fade-in duration-300'}`}
-        onClick={handleClose}
+        onClick={(e) => { e.stopPropagation(); handleClose() }}
       />
 
       {/* Modal */}
       <div
+        onClick={(e) => e.stopPropagation()}
         className={`fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm bg-[#111111] border border-[#222222] rounded-2xl shadow-2xl fill-mode-forwards ${isClosing ? 'animate-out fade-out zoom-out-95 duration-250' : 'animate-in fade-in zoom-in-95 duration-300'}`}
       >
         {/* Header */}
@@ -92,12 +99,14 @@ export default function ShareModal({ dream, onClose, onTokenChange }: ShareModal
           <div className="flex items-center gap-2 bg-[#1a1a1a] rounded-xl px-3 py-2.5">
             {isGenerating ? (
               <span className="text-[#555] text-sm flex-1">Generating link...</span>
+            ) : generateError ? (
+              <span className="text-red-400 text-sm flex-1">Couldn&apos;t generate link. Try again.</span>
             ) : (
               <span className="text-[#888] text-sm flex-1 truncate">{shareUrl}</span>
             )}
             <button
-              onClick={handleCopy}
-              disabled={isGenerating}
+              onClick={isGenerating || generateError ? undefined : handleCopy}
+              disabled={isGenerating || generateError}
               className="flex-shrink-0 text-xs font-medium px-3 py-1 rounded-full bg-[#2a2a2a] hover:bg-[#333] text-[#ededed] transition-colors disabled:opacity-40"
             >
               {copied ? 'Copied!' : 'Copy'}
