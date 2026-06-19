@@ -9,7 +9,7 @@ import LoadingScreen from '@/components/LoadingScreen'
 import { supabase, getDreams, deleteDream, getSharedWithMe, removeSharedWithMe } from '@/lib/supabase'
 import type { Dream, SharedDream } from '@/lib/types'
 
-const MOCK_SHARED = true
+const MOCK_SHARED = process.env.NODE_ENV === 'development'
 
 const MOCK_SHARED_ENTRIES: SharedDream[] = [
   {
