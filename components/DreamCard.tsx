@@ -58,7 +58,7 @@ export default function DreamCard({ dream, onAnalyze, onViewAnalysis, onDelete, 
       <div className="flex items-start justify-between gap-16">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-serif font-medium text-[#ededed] text-base leading-snug truncate">
+            <h3 className="font-serif font-medium text-[#ededed] text-lg leading-snug truncate">
               {dream.title || 'Untitled'}
             </h3>
           </div>
@@ -68,12 +68,13 @@ export default function DreamCard({ dream, onAnalyze, onViewAnalysis, onDelete, 
           </p>
         </div>
 
-        {selecting ? (
-          <div className="flex-shrink-0 self-center">
-            <div className={`w-4 h-4 rounded-full border ${selected ? 'bg-blue-500 border-blue-500' : 'border-[#444]'}`} />
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 opacity-100 md:opacity-0 md:group-hover/card:opacity-100 transition-opacity flex-shrink-0">
+        <div className="relative flex-shrink-0 flex items-center">
+          {selecting && (
+            <div className="absolute inset-0 flex items-center justify-end">
+              <div className={`w-4 h-4 rounded-full border ${selected ? 'bg-blue-500 border-blue-500' : 'border-[#444]'}`} />
+            </div>
+          )}
+          <div className={`flex items-center gap-2 transition-opacity flex-shrink-0 ${selecting ? 'opacity-0 pointer-events-none' : 'opacity-100 md:opacity-0 md:group-hover/card:opacity-100'}`}>
             {!isAnalyzed && (
               <button
                 onClick={(e) => { e.stopPropagation(); onAnalyze(dream) }}
@@ -128,7 +129,7 @@ export default function DreamCard({ dream, onAnalyze, onViewAnalysis, onDelete, 
               </span>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       {showShareModal && (
