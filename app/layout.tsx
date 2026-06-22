@@ -1,18 +1,13 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { EB_Garamond } from 'next/font/google'
 import './globals.css'
 
-const ppEiko = localFont({
-  src: [
-    { path: '../public/fonts/PPEiko-Medium.otf', weight: '500', style: 'normal' },
-    { path: '../public/fonts/PPEiko-LightItalic.otf', weight: '300', style: 'italic' },
-  ],
+const ebGaramond = EB_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  style: ['normal', 'italic'],
   variable: '--font-serif',
-})
-
-const ppEikoThin = localFont({
-  src: [{ path: '../public/fonts/PPEiko-Thin.otf', weight: '400', style: 'normal' }],
-  variable: '--font-serif-thin',
 })
 
 const ppNeueMontreal = localFont({
@@ -31,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${ppEiko.variable} ${ppEikoThin.variable} ${ppNeueMontreal.variable}`}>
+    <html lang="en" className={`${ebGaramond.variable} ${ppNeueMontreal.variable}`}>
       <body className="min-h-screen bg-[#0a0a0a] text-[#ededed] antialiased">
         {children}
       </body>

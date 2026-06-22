@@ -31,10 +31,12 @@ body {
 
 .font-serif {
   font-family: var(--font-serif), Georgia, serif;
+  font-weight: 500;
 }
 
 .font-serif-thin {
-  font-family: var(--font-serif-thin), Georgia, serif;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
 }
 
 ::selection {
