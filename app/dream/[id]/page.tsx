@@ -284,6 +284,22 @@ export default function DreamEntryPage() {
           onTokenChange={(token) => setDream(prev => prev ? { ...prev, share_token: token } : prev)}
         />
       )}
+
+      <button
+        onClick={() => router.push('/')}
+        className="fixed bottom-6 left-6 w-12 h-12 bg-[#1a1a1a] text-[#ededed] rounded-full flex items-center justify-center shadow-lg hover:bg-[#222] transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <button
+        onClick={() => router.push('/dream/new')}
+        className="fixed bottom-6 right-6 w-12 h-12 bg-[#ededed] text-[#0a0a0a] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors text-2xl font-light"
+      >
+        +
+      </button>
     </div>
   )
 }
