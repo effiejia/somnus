@@ -1,10 +1,10 @@
 import { Modal } from "@/components/Modal";
-import NewDreamPage from "../../new/page";
+import { NewDreamPageUI } from "../../new/page";
 
 export default function NewDream() {
 	return (
-		<Modal title="New Dream">
-			<NewDreamPage />
+		<Modal title="New Dream" redirectTo="/dream/new">
+			<NewDreamPageUI hideCancel />
 		</Modal>
 	);
 }

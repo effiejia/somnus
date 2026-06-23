@@ -8,14 +8,17 @@ interface SessionState {
 	userId: string | null;
 	avatarInitial: string;
 	status: SessionStatus;
+	isDirty: boolean;
 	init: () => Promise<void>;
 	signOut: () => Promise<void>;
+	setIsDirty: (isDirty: boolean) => void;
 }
 
 export const useSessionStore = create<SessionState>((set, get) => ({
 	userId: null,
 	avatarInitial: "?",
 	status: "idle",
+	isDirty: false,
 
 	// Idempotent + re-validating. Safe to call on every (app)-layout mount:
 	// a concurrent call (React Strict Mode double-invoke) bails while a fetch
@@ -41,4 +44,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 		await apiSignOut();
 		set({ status: "anon", userId: null, avatarInitial: "?" });
 	},
+	setIsDirty: (isDirty: boolean) => {
+		set({ isDirty });
+	}
 }));

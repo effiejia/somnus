@@ -1,18 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { getCurrentUser } from "@/lib/api/auth";
 import { createDream } from "@/lib/api/dreams";
 import { generateTitle } from "@/lib/api/title";
+import { useSessionStore } from "@/store/useSessionStore";
 
-export default function NewDreamPage() {
+export function NewDreamPageUI({ hideCancel }: { hideCancel?: boolean } = {}) {
 	const router = useRouter();
 	const [body, setBody] = useState("");
 	const [saving, setSaving] = useState(false);
 	const [userId, setUserId] = useState<string | null>(null);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+	const setIsDirty = useSessionStore((s) => s.setIsDirty);
 	useEffect(() => {
 		getCurrentUser().then((user) => {
 			if (!user) router.replace("/login");
@@ -26,6 +27,11 @@ export default function NewDreamPage() {
 
 	// Auto-resize textarea
 	useEffect(() => {
+		if (body.length > 0) {
+			setIsDirty(true);
+		} else {
+			setIsDirty(false);
+		}
 		const ta = textareaRef.current;
 		if (!ta) return;
 		ta.style.height = "auto";
@@ -53,18 +59,16 @@ export default function NewDreamPage() {
 					{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
 				</p>
 				<div className="flex items-center gap-2">
-					<button
-						onClick={() => {
-							if (window.history?.length && window.history.length > 1) {
-								router.back();
-							} else {
+					{!hideCancel && (
+						<button
+							onClick={() => {
 								router.push("/");
-							}
-						}}
-						className="border border-[#333] rounded-full px-3 py-1.5 text-sm text-[#ededed] hover:border-[#555] transition-colors"
-					>
-						Cancel
-					</button>
+							}}
+							className="border border-[#333] rounded-full px-3 py-1.5 text-sm text-[#ededed] hover:border-[#555] transition-colors"
+						>
+							Cancel
+						</button>
+					)}
 					<button
 						onClick={handleSave}
 						disabled={saving || !body.trim()}
@@ -85,4 +89,8 @@ export default function NewDreamPage() {
 			/>
 		</main>
 	);
+}
+
+export default function NewDreamPage() {
+	redirect("/dream/new");
 }
