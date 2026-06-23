@@ -12,7 +12,7 @@ export default function NewDream() {
 			transition={{ duration: 0.2 }}
 			// Sits below the fixed navbar (z-30) and above the main dream log,
 			// which scales down + blurs itself behind this translucent scrim.
-			className="fixed pt-16 inset-0 z-20 overflow-y-auto bg-[#0a0a0a]/60"
+			className="fixed pt-16 inset-0 z-20 overflow-y-auto bg-[#0a0a0a]"
 		>
 			<NewDreamPageUI />
 		</motion.div>

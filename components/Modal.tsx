@@ -3,7 +3,7 @@
 
 import { Maximize, X } from "lucide-react";
 import { motion } from "motion/react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { type ElementRef, type MouseEvent, useEffect, useRef } from "react";
 import { useSessionStore } from "@/store/useSessionStore";
 
