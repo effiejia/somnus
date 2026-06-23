@@ -1,28 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { useDreamStore } from "@/store/useDreamStore";
+import { useSessionStore } from "@/store/useSessionStore";
 import SomnusIcon from "./SomnusIcon";
 
-interface NavbarProps {
-	showSearch?: boolean;
-	onSearch?: (q: string) => void;
-	avatarInitial?: string;
-	onSignOut?: () => void;
-}
-
-export default function Navbar({
-	showSearch = false,
-	onSearch,
-	avatarInitial = "E",
-	onSignOut,
-}: NavbarProps) {
+export default function Navbar() {
+	const router = useRouter();
+	const pathname = usePathname();
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [query, setQuery] = useState("");
 
+	const avatarInitial = useSessionStore((s) => s.avatarInitial);
+	const signOut = useSessionStore((s) => s.signOut);
+	const search = useDreamStore((s) => s.search);
+	const hasDreams = useDreamStore((s) => s.dreams.length > 0);
+
+	const showSearch = pathname === "/" && hasDreams;
+
 	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
 		setQuery(e.target.value);
-		onSearch?.(e.target.value);
+		search(e.target.value);
+	}
+
+	async function handleSignOut() {
+		await signOut();
+		router.push("/login");
 	}
 
 	return (
@@ -35,7 +40,7 @@ export default function Navbar({
 							onClick={() => {
 								setSearchOpen(false);
 								setQuery("");
-								onSearch?.("");
+								search("");
 							}}
 							className="text-[#6b6b6b]"
 						>
@@ -102,7 +107,7 @@ export default function Navbar({
 					)}
 					{/* Avatar — click to sign out */}
 					<button
-						onClick={onSignOut}
+						onClick={handleSignOut}
 						title="Sign out"
 						className="w-8 h-8 rounded-full bg-[#222222] flex items-center justify-center text-xs text-[#ededed] hover:bg-[#333] transition-colors"
 					>

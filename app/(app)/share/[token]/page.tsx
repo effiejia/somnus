@@ -3,24 +3,14 @@
 import { useParams } from "next/navigation";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import { DeleteIcon } from "@/components/icons";
-import Navbar from "@/components/Navbar";
 import TooltipIconButton from "@/components/TooltipIconButton";
 import { useSharedDream } from "@/hooks/useSharedDream";
 import { formatTimestamp } from "@/lib/utils/formatDate";
 
 export default function SharedDreamPage() {
 	const { token } = useParams() as { token: string };
-	const {
-		dream,
-		notFound,
-		sharerEmail,
-		isSaved,
-		showPanel,
-		setShowPanel,
-		avatarInitial,
-		handleSignOut,
-		handleRemove,
-	} = useSharedDream(token);
+	const { dream, notFound, sharerEmail, isSaved, showPanel, setShowPanel, handleRemove } =
+		useSharedDream(token);
 
 	if (notFound) {
 		return (
@@ -36,9 +26,7 @@ export default function SharedDreamPage() {
 	if (!dream) return <div className="min-h-screen bg-[#0a0a0a]" />;
 
 	return (
-		<div className="min-h-screen bg-[#0a0a0a]">
-			<Navbar avatarInitial={avatarInitial} onSignOut={handleSignOut} />
-
+		<>
 			<main className="relative z-10 max-w-3xl mx-auto px-4 md:px-0 py-4 pb-32">
 				<div className="flex items-start justify-between gap-4 mb-8">
 					<div className="flex-1 min-w-0">
@@ -84,6 +72,6 @@ export default function SharedDreamPage() {
 			{showPanel && dream.analysis && (
 				<AnalysisPanel analysis={dream.analysis} onClose={() => setShowPanel(false)} />
 			)}
-		</div>
+		</>
 	);
 }

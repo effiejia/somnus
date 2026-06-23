@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { MOCK_SHARED, MOCK_SHARED_ENTRIES } from "@/constants/mocks";
-import { getCurrentUser, signOut } from "@/lib/api/auth";
+import { getCurrentUser } from "@/lib/api/auth";
 import { getSharedWithMe, removeSharedWithMe } from "@/lib/api/sharing";
 import type { Dream, SharedDream } from "@/lib/types";
 import * as cache from "@/lib/utils/dreamCache";
@@ -30,7 +30,6 @@ export function useDreamLog() {
 	const [_userId, setUserId] = useState<string | null>(null);
 	const [tab, setTab] = useState<"my" | "shared">("my");
 	const [sharedWithMe, setSharedWithMe] = useState<SharedDream[]>([]);
-	const [avatarInitial, setAvatarInitial] = useState("?");
 
 	// Hydrate from sessionStorage after mount. Reading storage during render
 	// (e.g. in useState initializers) breaks SSR hydration: the server has no
@@ -39,7 +38,6 @@ export function useDreamLog() {
 		if (!cache.hasSeenSplash()) {
 			setShowSplash(true);
 		}
-		setAvatarInitial(cache.readAvatar("?"));
 		if (cache.hasCachedDreams()) {
 			hydrateFromCache();
 			setLoading(false);
@@ -54,9 +52,6 @@ export function useDreamLog() {
 				return;
 			}
 			setUserId(user.id);
-			const initial = (user.email?.[0] ?? "?").toUpperCase();
-			setAvatarInitial(initial);
-			cache.writeAvatar(initial);
 			await loadDreams(user.id);
 			const shared = await getSharedWithMe(user.id);
 			setSharedWithMe(MOCK_SHARED ? [...MOCK_SHARED_ENTRIES, ...shared] : shared);
@@ -113,11 +108,6 @@ export function useDreamLog() {
 		});
 	}
 
-	async function handleSignOut() {
-		await signOut();
-		router.push("/login");
-	}
-
 	function dismissSplash() {
 		cache.markSplashSeen();
 		setShowSplash(false);
@@ -145,7 +135,6 @@ export function useDreamLog() {
 		dismissSplash,
 		dreams,
 		filtered,
-		avatarInitial,
 		tab,
 		setTab,
 		sharedWithMe,
@@ -160,7 +149,6 @@ export function useDreamLog() {
 		removeShared,
 		removeSelectedShared,
 		onTokenChange,
-		handleSignOut,
 		openSharedDream,
 		goToNew,
 		goToAnalyze,

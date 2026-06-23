@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getDreamByShareToken } from "@/lib/api/dreams";
 import { saveSharedDream, removeSharedWithMe, getSharerEmail } from "@/lib/api/sharing";
-import { getCurrentUser, signOut } from "@/lib/api/auth";
+import { getCurrentUser } from "@/lib/api/auth";
 import * as cache from "@/lib/utils/dreamCache";
 import type { Dream } from "@/lib/types";
 
@@ -15,13 +15,6 @@ export function useSharedDream(token: string) {
 	const [sharerEmail, setSharerEmail] = useState<string | null>(null);
 	const [isSaved, setIsSaved] = useState(false);
 	const [showPanel, setShowPanel] = useState(false);
-	const [avatarInitial, setAvatarInitial] = useState("E");
-
-	// Read sessionStorage after mount, not during render, to avoid an SSR
-	// hydration mismatch on the Navbar avatar (server has no sessionStorage).
-	useEffect(() => {
-		setAvatarInitial(cache.readAvatar("E"));
-	}, []);
 
 	useEffect(() => {
 		async function load() {
@@ -52,11 +45,6 @@ export function useSharedDream(token: string) {
 		load();
 	}, [token]);
 
-	async function handleSignOut() {
-		await signOut();
-		router.push("/login");
-	}
-
 	async function handleRemove() {
 		if (!dream) return;
 		await removeSharedWithMe(dream.id);
@@ -70,8 +58,6 @@ export function useSharedDream(token: string) {
 		isSaved,
 		showPanel,
 		setShowPanel,
-		avatarInitial,
-		handleSignOut,
 		handleRemove,
 	};
 }
