@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
+import { usePathname, useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useEffect } from "react";
 import { useSessionStore } from "@/store/useSessionStore";
 
@@ -26,8 +27,8 @@ export default function ProtectedLayout({
 	}
 	return (
 		<>
+			{createdream}
 			{children}
-			<div>{createdream}</div>
 		</>
 	);
 }

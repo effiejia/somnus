@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import DreamEntryToolbar from "@/components/DreamEntryToolbar";
 import ShareModal from "@/components/ShareModal";
@@ -31,7 +31,7 @@ export default function DreamEntryPage() {
 		handleDelete,
 		setShareToken,
 	} = useDreamEntry(id);
-
+	const path = usePathname();
 	if (!dream) return null;
 
 	const hasText = body.trim() !== "";
@@ -53,7 +53,11 @@ export default function DreamEntryPage() {
 		<>
 			<motion.main
 				initial={{ opacity: 0, x: -10 }}
-				animate={{ opacity: 1, x: 0 }}
+				animate={
+					path === `/dream/${id}`
+						? { scale: 1, opacity: 1, x: 0, filter: "none" }
+						: { scale: 0.9, opacity: 0.3, x: 0, filter: "blur(10px)" }
+				}
 				transition={{ duration: 0.2 }}
 				className="relative z-10 max-w-3xl mx-auto px-4 md:px-0 py-4 pb-32"
 			>

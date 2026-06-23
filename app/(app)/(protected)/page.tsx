@@ -2,11 +2,13 @@
 
 import { motion } from "motion/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import DreamCard from "@/components/DreamCard";
 import LoadingScreen from "@/components/LoadingScreen";
 import SelectionControls from "@/components/SelectionControls";
 import SharedDreamCard from "@/components/SharedDreamCard";
 import { useDreamLog } from "@/hooks/useDreamLog";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function DreamLogPage() {
 	const {
@@ -34,14 +36,24 @@ export default function DreamLogPage() {
 		goToViewAnalysis,
 	} = useDreamLog();
 
+	const isMobile = useIsMobile();
+
+	const path = usePathname();
+
 	if (showSplash) return <LoadingScreen onDone={dismissSplash} />;
 	if (loading) return null;
 
 	const isEmpty = dreams.length === 0;
-
 	return (
 		<>
-			<main className="max-w-3xl mx-auto px-4 md:px-0 pb-24">
+			<motion.main
+				animate={
+					path === "/"
+						? { scale: 1, opacity: 1, filter: "none" }
+						: { scale: 0.9, opacity: 0.3, filter: "blur(10px)" }
+				}
+				className="max-w-3xl mx-auto px-4 md:px-0 pb-24"
+			>
 				{isEmpty ? (
 					<div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-8 text-center">
 						<h1 className="font-serif font-medium text-3xl text-[#ededed]">Dream log</h1>
@@ -163,11 +175,11 @@ export default function DreamLogPage() {
 						)}
 					</>
 				)}
-			</main>
+			</motion.main>
 
 			<Link
 				className="fixed bottom-6 right-6 w-12 h-12 bg-[#ededed] text-[#0a0a0a] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors text-xl font-light"
-				href={"/new"}
+				href={isMobile ? "/dream/new" : "/new"}
 			>
 				+
 			</Link>

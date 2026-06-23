@@ -62,7 +62,7 @@ export function NewDreamPageUI({ hideCancel }: { hideCancel?: boolean } = {}) {
 					{!hideCancel && (
 						<button
 							onClick={() => {
-								router.push("/");
+								router.back();
 							}}
 							className="border border-[#333] rounded-full px-3 py-1.5 text-sm text-[#ededed] hover:border-[#555] transition-colors"
 						>
