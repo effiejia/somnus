@@ -23,7 +23,7 @@ export default function DreamEntryToolbar({
 	onDelete,
 }: DreamEntryToolbarProps) {
 	return (
-		<div className="flex items-center gap-2 flex-shrink-0 pt-1">
+		<div className="flex items-center gap-2 shrink-0 pt-1">
 			{buttonMode === "disabled" && (
 				<button
 					disabled

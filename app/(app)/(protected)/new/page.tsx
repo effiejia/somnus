@@ -54,7 +54,13 @@ export default function NewDreamPage() {
 				</p>
 				<div className="flex items-center gap-2">
 					<button
-						onClick={() => router.back()}
+						onClick={() => {
+							if (window.history?.length && window.history.length > 1) {
+								router.back();
+							} else {
+								router.push("/");
+							}
+						}}
 						className="border border-[#333] rounded-full px-3 py-1.5 text-sm text-[#ededed] hover:border-[#555] transition-colors"
 					>
 						Cancel
@@ -75,7 +81,7 @@ export default function NewDreamPage() {
 				onChange={(e) => setBody(e.target.value)}
 				placeholder="What did you dream about?"
 				rows={1}
-				className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#333] break-words"
+				className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#333] wrap-break-word"
 			/>
 		</main>
 	);
