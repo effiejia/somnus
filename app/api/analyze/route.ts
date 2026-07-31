@@ -12,11 +12,22 @@ export async function POST(req: NextRequest) {
 
 	const message = await client.messages.create({
 		model: "claude-sonnet-4-6",
-		max_tokens: 600,
+		max_tokens: 800,
 		messages: [
 			{
 				role: "user",
-				content: `Analyze the following dream. Explore its themes, symbols, and emotional atmosphere. Write 2-3 paragraphs in a thoughtful, literary tone — not clinical, not preachy. Do not use bullet points.
+				content: `You are a psychologist specializing in dream analysis. Analyze the following dream using exactly this structure:
+
+**Interpretation**
+2-3 sentences. What the dream likely reflects about the dreamer's inner life, concerns, or psychological state. Grounded and direct.
+
+**Key Symbols**
+3-5 bullet points. Each bullet names a symbol from the dream and gives a brief psychological reading of it.
+
+**Emotional Tone**
+1-2 sentences. Describe the dominant emotional atmosphere of the dream and what it might indicate.
+
+Use a clinical but humane tone — informed and observational.
 
 Dream title: ${title || "Untitled"}
 
