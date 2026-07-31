@@ -42,7 +42,7 @@ export const MOCK_SHARED_ENTRIES: SharedDream[] = [
 	},
 ];
 
-export const MOCK_ANALYSIS = true;
+export const MOCK_ANALYSIS = process.env.NEXT_PUBLIC_MOCK_ANALYSIS === "true";
 
 export const MOCK_ANALYSIS_TEXT = `**Emotional tone:** Anxious undercurrent softened by moments of wonder — the dream oscillates between unease and awe.
 
