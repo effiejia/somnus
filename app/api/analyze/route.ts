@@ -19,10 +19,10 @@ export async function POST(req: NextRequest) {
 				content: `You are a psychologist specializing in dream analysis. Analyze the following dream using exactly this structure:
 
 **Interpretation**
-2-3 sentences. What the dream likely reflects about the dreamer's inner life, concerns, or psychological state. Grounded and direct.
+3-5 sentences. What the dream likely reflects about the dreamer's inner life, concerns, or psychological state. Grounded and direct.
 
 **Key Symbols**
-3-5 bullet points. Each bullet names a symbol from the dream and gives a brief psychological reading of it.
+2-4 bullet points. Each bullet names a symbol from the dream and gives a brief psychological reading of it.
 
 **Emotional Tone**
 1-2 sentences. Describe the dominant emotional atmosphere of the dream and what it might indicate.

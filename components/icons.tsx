@@ -1,3 +1,46 @@
+export function ImportIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path fill="currentColor" d="M8.325 12.47a.75.75 0 1 0 1.06 1.06l3-3a.75.75 0 0 0 0-1.06l-3-3a.75.75 0 1 0-1.06 1.06l1.72 1.72H.895a.75.75 0 0 0 0 1.5h9.15z"/>
+			<path fill="currentColor" d="M14.75 2.021h-8.5C5.01 2.021 4 3.031 4 4.271V6.24a.75.75 0 0 0 1.5 0V4.271c0-.413.337-.75.75-.75h8.5c.413 0 .75.337.75.75v11.5a.75.75 0 0 1-.75.75H6.453a.75.75 0 0 1-.75-.75v-2.044a.75.75 0 0 0-1.5 0v2.044c0 1.24 1.01 2.25 2.25 2.25h8.297c1.24 0 2.25-1.01 2.25-2.25v-11.5c0-1.24-1.01-2.25-2.25-2.25"/>
+		</svg>
+	);
+}
+
+export function XIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M15 5L5 15M5 5l10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+		</svg>
+	);
+}
+
+export function ThreeDotsIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<circle cx="4" cy="10" r="1.5" fill="currentColor"/>
+			<circle cx="10" cy="10" r="1.5" fill="currentColor"/>
+			<circle cx="16" cy="10" r="1.5" fill="currentColor"/>
+		</svg>
+	);
+}
+
+export function EyeIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path fill="currentColor" d="M16.341 5.28 12.72 1.66A2.24 2.24 0 0 0 11.13 1H5.25C4.01 1 3 2.01 3 3.25v12.5C3 16.99 4.01 18 5.25 18h9.5c1.24 0 2.25-1.01 2.25-2.25V6.871c0-.592-.24-1.172-.659-1.59m-1.06 1.06c.045.046.073.105.105.16H12.25a.75.75 0 0 1-.75-.75V2.614c.055.032.113.06.159.106zM14.75 16.5h-9.5a.75.75 0 0 1-.75-.75V3.25a.75.75 0 0 1 .75-.75H10v3.25C10 6.99 11.01 8 12.25 8h3.25v7.75a.75.75 0 0 1-.75.75"/>
+		</svg>
+	);
+}
+
+export function SparkleIcon({ className }: { className?: string }) {
+	return (
+		<svg className={className} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path fill="currentColor" d="M9.918 13.25a1.274 1.274 0 0 1-1.245-1.546l.728-3.374-2.319-2.557a1.27 1.27 0 0 1-.159-1.494 1.27 1.27 0 0 1 1.373-.606l3.374.727 2.558-2.318a1.27 1.27 0 0 1 1.493-.16c.481.28.724.831.606 1.374L15.6 6.67l2.318 2.558a1.27 1.27 0 0 1 .16 1.492 1.27 1.27 0 0 1-1.373.608l-3.374-.73-2.558 2.32a1.27 1.27 0 0 1-.855.331m.974-4.717-.605 2.8L12.41 9.41a1.28 1.28 0 0 1 1.122-.301l2.802.605-1.924-2.122a1.27 1.27 0 0 1-.3-1.126l.604-2.798-2.122 1.924a1.28 1.28 0 0 1-1.126.3l-2.798-.604 1.924 2.122c.275.304.388.724.3 1.124m-7.546 9.718a.75.75 0 0 1-.734-.908l.307-1.418-.975-1.075a.75.75 0 0 1 .714-1.237l1.418.307 1.074-.975a.75.75 0 0 1 1.237.714l-.306 1.418.975 1.074a.75.75 0 0 1-.714 1.238l-1.418-.307-1.074.975a.75.75 0 0 1-.504.194"/>
+		</svg>
+	);
+}
+
 export function RefreshIcon({ className }: { className?: string }) {
 	return (
 		<svg

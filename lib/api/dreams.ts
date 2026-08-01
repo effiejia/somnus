@@ -39,13 +39,28 @@ export async function createDream(userId: string, title: string, body: string): 
 
 export async function updateDream(
 	id: string,
-	fields: { title?: string; body?: string; analysis?: string; analyzed_body?: string },
+	fields: { title?: string; body?: string; analysis?: string; analyzed_body?: string; created_at?: string },
 ): Promise<void> {
 	const { error } = await supabase
 		.from("dreams")
 		.update({ ...fields, updated_at: new Date().toISOString() })
 		.eq("id", id);
 	if (error) throw error;
+}
+
+export async function importDream(
+	userId: string,
+	title: string,
+	body: string,
+	createdAt: Date,
+): Promise<Dream> {
+	const { data, error } = await supabase
+		.from("dreams")
+		.insert({ user_id: userId, title, body, created_at: createdAt.toISOString() })
+		.select()
+		.single();
+	if (error) throw error;
+	return data;
 }
 
 export async function deleteDream(id: string): Promise<void> {

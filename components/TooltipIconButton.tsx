@@ -22,7 +22,8 @@ export default function TooltipIconButton({
 			>
 				{icon}
 			</button>
-			<span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity">
+			<span className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded text-xs text-[#aaa] bg-[#1e1e1e] whitespace-nowrap opacity-0 group-hover/btn:opacity-100 transition-opacity z-50">
+				<span className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1e1e1e] rotate-45" />
 				{label}
 			</span>
 		</div>

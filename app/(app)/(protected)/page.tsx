@@ -4,11 +4,13 @@ import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import DreamCard from "@/components/DreamCard";
+import ImportModal from "@/components/ImportModal";
 import LoadingScreen from "@/components/LoadingScreen";
 import SelectionControls from "@/components/SelectionControls";
 import SharedDreamCard from "@/components/SharedDreamCard";
 import { useDreamLog } from "@/hooks/useDreamLog";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDreamStore } from "@/store/useDreamStore";
 
 export default function DreamLogPage() {
 	const {
@@ -26,6 +28,10 @@ export default function DreamLogPage() {
 		selected,
 		toggleSelect,
 		deleteSelected,
+		analyzeSelected,
+		analyzingProgress,
+		unanalyzedSelectedCount,
+		selectAll,
 		removeDream,
 		removeShared,
 		removeSelectedShared,
@@ -34,10 +40,13 @@ export default function DreamLogPage() {
 		goToNew,
 		goToAnalyze,
 		goToViewAnalysis,
+		userId,
+		loadDreams,
 	} = useDreamLog();
 
+	const importOpen = useDreamStore((s) => s.importOpen);
+	const closeImport = useDreamStore((s) => s.closeImport);
 	const isMobile = useIsMobile();
-
 	const path = usePathname();
 
 	if (showSplash) return <LoadingScreen onDone={dismissSplash} />;
@@ -101,16 +110,20 @@ export default function DreamLogPage() {
 								</button>
 							</div>
 
-							<div className="flex items-center gap-3">
+							<div className="flex items-center gap-2">
 								{tab === "my" && (
 									<SelectionControls
 										selecting={selecting}
 										selectedCount={selected.size}
 										totalCount={dreams.length}
-										actionLabel="Delete"
-										onAction={deleteSelected}
 										onStartSelecting={startSelecting}
+										onSelectAll={selectAll}
 										onCancel={cancelSelecting}
+	
+										onDelete={deleteSelected}
+										onAnalyze={analyzeSelected}
+										analyzeCount={unanalyzedSelectedCount}
+										analyzingProgress={analyzingProgress}
 									/>
 								)}
 								{tab === "shared" && (
@@ -118,10 +131,11 @@ export default function DreamLogPage() {
 										selecting={selecting}
 										selectedCount={selected.size}
 										totalCount={sharedWithMe.length}
-										actionLabel="Remove"
-										onAction={removeSelectedShared}
 										onStartSelecting={startSelecting}
+										onSelectAll={selectAll}
 										onCancel={cancelSelecting}
+	
+										onDelete={removeSelectedShared}
 									/>
 								)}
 							</div>
@@ -183,6 +197,16 @@ export default function DreamLogPage() {
 			>
 				+
 			</Link>
+
+			{importOpen && userId && (
+				<ImportModal
+					userId={userId}
+					onClose={closeImport}
+					onImported={() => {
+						if (userId) loadDreams(userId);
+					}}
+				/>
+			)}
 		</>
 	);
 }

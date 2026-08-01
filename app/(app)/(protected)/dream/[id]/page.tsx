@@ -2,12 +2,19 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
+import { useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import AnalysisPanel from "@/components/AnalysisPanel";
 import DreamEntryToolbar from "@/components/DreamEntryToolbar";
 import ShareModal from "@/components/ShareModal";
 import { useDreamEntry } from "@/hooks/useDreamEntry";
 import { formatEditedSuffix, formatTimestamp } from "@/lib/utils/formatDate";
+
+function toDatetimeLocalValue(iso: string): string {
+	const d = new Date(iso);
+	const offset = d.getTimezoneOffset();
+	return new Date(d.getTime() - offset * 60000).toISOString().slice(0, 16);
+}
 
 export default function DreamEntryPage() {
 	const params = useParams();
@@ -27,10 +34,13 @@ export default function DreamEntryPage() {
 		handleTitleChange,
 		handleBodyChange,
 		handleBlur,
+		handleDateChange,
 		runAnalysis,
 		handleDelete,
 		setShareToken,
 	} = useDreamEntry(id);
+
+	const [editingDate, setEditingDate] = useState(false);
 	const path = usePathname();
 	if (!dream) return null;
 
@@ -61,22 +71,50 @@ export default function DreamEntryPage() {
 				transition={{ duration: 0.2 }}
 				className="relative z-10 max-w-3xl mx-auto px-4 md:px-0 py-4 pb-32"
 			>
+				<button
+					onClick={() => router.push("/")}
+					className="hidden lg:flex text-[#555] hover:text-[#888] text-sm transition-colors mb-6"
+				>
+					← Back
+				</button>
+
 				<div className="flex items-start justify-between gap-4 mb-8">
 					<div className="relative flex-1 min-w-0">
-						<HomeButton
-							onClick={() => router.push("/")}
-							className="hidden lg:flex absolute top-1/2 transform -translate-y-1/2 right-full mr-2"
-						/>
 						<input
 							value={title}
 							onChange={handleTitleChange}
 							onBlur={() => handleBlur(title, body)}
 							placeholder="Untitled"
-							className="font-serif font-medium text-3xl text-[#ededed] leading-tight bg-transparent border-none outline-none w-full placeholder-[#333]"
+							className="font-serif font-medium text-3xl text-[#ededed] leading-tight bg-transparent border-none outline-none w-full placeholder-[#555]"
 						/>
 						<p className="text-[#6b6b6b] text-sm mt-1">
-							{formatTimestamp(dream.created_at)}
-							{editedSuffix && (
+							{editingDate ? (
+								<input
+									// biome-ignore lint/a11y/noAutofocus: intentional focus on edit
+									autoFocus
+									type="datetime-local"
+									defaultValue={toDatetimeLocalValue(dream.created_at)}
+									onBlur={(e) => {
+										setEditingDate(false);
+										if (e.target.value) handleDateChange(e.target.value);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === "Enter") e.currentTarget.blur();
+										if (e.key === "Escape") {
+											setEditingDate(false);
+										}
+									}}
+									className="bg-transparent text-[#6b6b6b] text-sm outline-none"
+								/>
+							) : (
+								<button
+									onClick={() => setEditingDate(true)}
+									className="hover:text-[#888] transition-colors"
+								>
+									{formatTimestamp(dream.created_at)}
+								</button>
+							)}
+							{!editingDate && editedSuffix && (
 								<>
 									{" · "}
 									{editedSuffix}
@@ -103,7 +141,7 @@ export default function DreamEntryPage() {
 					onBlur={() => handleBlur(title, body)}
 					placeholder="Write your dream..."
 					rows={1}
-					className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#333] wrap-break-word"
+					className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#555] wrap-break-word"
 				/>
 			</motion.main>
 
@@ -120,10 +158,10 @@ export default function DreamEntryPage() {
 					onTokenChange={setShareToken}
 				/>
 			)}
-			<HomeButton onClick={() => router.push("/")} className="lg:hidden fixed bottom-6 left-6" />
+			<HomeButton onClick={() => router.push("/")} className="lg:hidden fixed bottom-6 left-6 z-20" />
 			<Link
 				href="/new"
-				className="fixed bottom-6 right-6 w-12 h-12 bg-[#ededed] text-[#0a0a0a] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors text-2xl font-light"
+				className="fixed bottom-6 right-6 z-20 w-12 h-12 bg-[#ededed] text-[#0a0a0a] rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors text-2xl font-light"
 			>
 				+
 			</Link>

@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useDreamStore } from "@/store/useDreamStore";
 import { useSessionStore } from "@/store/useSessionStore";
+import { ImportIcon } from "@/components/icons";
+import TooltipIconButton from "@/components/TooltipIconButton";
 import SomnusIcon from "./SomnusIcon";
 
 export default function Navbar() {
@@ -17,8 +19,10 @@ export default function Navbar() {
 	const signOut = useSessionStore((s) => s.signOut);
 	const search = useDreamStore((s) => s.search);
 	const hasDreams = useDreamStore((s) => s.dreams.length > 0);
+	const openImport = useDreamStore((s) => s.openImport);
 
 	const showSearch = pathname === "/" && hasDreams;
+	const showImport = pathname === "/";
 
 	function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
 		setQuery(e.target.value);
@@ -104,6 +108,14 @@ export default function Navbar() {
 								<path d="m21 21-4.35-4.35" />
 							</svg>
 						</button>
+					)}
+					{/* Import */}
+					{showImport && (
+						<TooltipIconButton
+							label="Import dreams"
+							icon={<ImportIcon className="w-4 h-4" />}
+							onClick={openImport}
+						/>
 					)}
 					{/* Avatar — click to sign out */}
 					<button

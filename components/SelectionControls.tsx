@@ -1,37 +1,82 @@
 "use client";
 
+import { DeleteIcon, SparkleIcon, XIcon } from "@/components/icons";
+import TooltipIconButton from "@/components/TooltipIconButton";
+
 interface SelectionControlsProps {
 	selecting: boolean;
 	selectedCount: number;
 	totalCount: number;
-	actionLabel: string;
-	onAction: () => void;
 	onStartSelecting: () => void;
+	onSelectAll: () => void;
 	onCancel: () => void;
+
+	onDelete?: () => void;
+	onAnalyze?: () => void;
+	analyzeCount?: number;
+	analyzingProgress?: { done: number; total: number } | null;
 }
 
 export default function SelectionControls({
 	selecting,
 	selectedCount,
 	totalCount,
-	actionLabel,
-	onAction,
 	onStartSelecting,
+	onSelectAll,
 	onCancel,
+
+	onDelete,
+	onAnalyze,
+	analyzeCount = 0,
+	analyzingProgress,
 }: SelectionControlsProps) {
 	if (selecting) {
 		return (
 			<>
 				<button
-					onClick={onAction}
-					disabled={selectedCount === 0}
-					className="text-red-400 text-sm disabled:opacity-30"
+					onClick={onSelectAll}
+					disabled={!!analyzingProgress}
+					className="text-[#6b6b6b] text-sm hover:text-[#888] transition-colors disabled:opacity-30"
 				>
-					{actionLabel} ({selectedCount})
+					Select all
 				</button>
-				<button onClick={onCancel} className="text-[#6b6b6b] text-sm">
-					Cancel
-				</button>
+
+				{onAnalyze && (
+					<TooltipIconButton
+						label={
+							analyzingProgress
+								? `Analyzing ${analyzingProgress.done} of ${analyzingProgress.total}…`
+								: `Analyze (${analyzeCount})`
+						}
+						icon={<SparkleIcon className="w-4 h-4" />}
+						onClick={onAnalyze}
+						className={`p-1 transition-colors ${
+							analyzeCount === 0 || !!analyzingProgress
+								? "opacity-30 pointer-events-none text-[#6b6b6b]"
+								: "text-blue-400 hover:text-blue-300"
+						}`}
+					/>
+				)}
+
+				{onDelete && (
+					<TooltipIconButton
+						label={`Delete (${selectedCount})`}
+						icon={<DeleteIcon className="w-4 h-4" />}
+						onClick={onDelete}
+						className={`p-1 transition-colors ${
+							selectedCount === 0 || !!analyzingProgress
+								? "opacity-30 pointer-events-none text-[#6b6b6b]"
+								: "text-red-400 hover:text-red-300"
+						}`}
+					/>
+				)}
+
+				<TooltipIconButton
+					label="Cancel"
+					icon={<XIcon className="w-4 h-4" />}
+					onClick={onCancel}
+					className={`text-[#555] hover:text-[#888] p-1 transition-colors${analyzingProgress ? " opacity-30 pointer-events-none" : ""}`}
+				/>
 			</>
 		);
 	}

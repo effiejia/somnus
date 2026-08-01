@@ -1,6 +1,6 @@
 "use client";
 
-import { DeleteIcon, RefreshIcon, ShareIcon } from "@/components/icons";
+import { DeleteIcon, EyeIcon, RefreshIcon, ShareIcon, SparkleIcon } from "@/components/icons";
 import TooltipIconButton from "@/components/TooltipIconButton";
 
 interface DreamEntryToolbarProps {
@@ -27,34 +27,37 @@ export default function DreamEntryToolbar({
 			{buttonMode === "disabled" && (
 				<button
 					disabled
-					className="text-sm px-3 py-1 rounded-full bg-[#1a1a1a] text-[#444] cursor-not-allowed"
+					className="text-sm p-1.5 md:px-3 md:py-1 rounded-full bg-[#1a1a1a] text-[#444] cursor-not-allowed flex items-center justify-center"
 				>
-					Analyze
+					<SparkleIcon className="w-4 h-4 md:hidden" />
+					<span className="hidden md:inline">Analyze</span>
 				</button>
 			)}
 			{buttonMode === "analyze" && (
 				<button
 					onClick={onAnalyze}
-					className="text-sm px-3 py-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+					className="text-sm p-1.5 md:px-3 md:py-1 rounded-full bg-blue-600 hover:bg-blue-500 text-white transition-colors flex items-center justify-center"
 				>
-					Analyze
+					<SparkleIcon className="w-4 h-4 md:hidden" />
+					<span className="hidden md:inline">Analyze</span>
 				</button>
 			)}
 			{buttonMode === "analyzing" && (
 				<button
 					disabled
-					className="flex items-center gap-1.5 text-sm px-3 py-1 rounded-full bg-blue-600/40 text-blue-300 cursor-not-allowed"
+					className="flex items-center gap-1.5 text-sm p-1.5 md:px-3 md:py-1 rounded-full bg-blue-600/40 text-blue-300 cursor-not-allowed"
 				>
 					<span className="w-3 h-3 border-2 border-blue-400/40 border-t-blue-300 rounded-full animate-spin" />
-					Analyzing...
+					<span className="hidden md:inline">Analyzing...</span>
 				</button>
 			)}
 			{buttonMode === "view" && (
 				<button
 					onClick={onView}
-					className="text-sm px-3 py-1 rounded-full border border-[#333] text-[#ededed] hover:border-[#555] transition-colors"
+					className="text-sm p-1.5 md:px-3 md:py-1 rounded-full border border-[#333] text-[#ededed] hover:border-[#555] transition-colors flex items-center justify-center"
 				>
-					View analysis
+					<EyeIcon className="w-4 h-4 md:hidden" />
+					<span className="hidden md:inline">View analysis</span>
 				</button>
 			)}
 

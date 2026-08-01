@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { DeleteIcon, RefreshIcon, ShareIcon } from "@/components/icons";
+import { DeleteIcon, EyeIcon, RefreshIcon, ShareIcon, SparkleIcon } from "@/components/icons";
 import ShareModal from "@/components/ShareModal";
 import TooltipIconButton from "@/components/TooltipIconButton";
 import type { Dream } from "@/lib/types";
@@ -85,9 +85,10 @@ export default function DreamCard({
 									e.stopPropagation();
 									onAnalyze(dream);
 								}}
-								className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 py-1 rounded-full transition-colors"
+								className="bg-blue-600 hover:bg-blue-500 text-white text-sm p-1.5 md:px-3 md:py-1 rounded-full transition-colors flex items-center justify-center"
 							>
-								Analyze
+								<SparkleIcon className="w-4 h-4 md:hidden" />
+								<span className="hidden md:inline">Analyze</span>
 							</button>
 						)}
 						{isAnalyzed && (
@@ -97,9 +98,10 @@ export default function DreamCard({
 										e.stopPropagation();
 										onViewAnalysis(dream);
 									}}
-									className="border border-[#333] hover:border-[#555] text-[#ededed] text-sm px-3 py-1 rounded-full transition-colors"
+									className="border border-[#333] hover:border-[#555] text-[#ededed] text-sm p-1.5 md:px-3 md:py-1 rounded-full transition-colors flex items-center justify-center"
 								>
-									View analysis
+									<EyeIcon className="w-4 h-4 md:hidden" />
+									<span className="hidden md:inline">View analysis</span>
 								</button>
 								{isStale && (
 									<TooltipIconButton

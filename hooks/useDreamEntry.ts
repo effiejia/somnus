@@ -39,6 +39,7 @@ export function useDreamEntry(id: string) {
 			}
 			await updateDream(d.id, { analysis, analyzed_body: d.body });
 			setDream((prev) => (prev ? { ...prev, analysis, analyzed_body: d.body } : prev));
+			setShowPanel(true);
 		} catch {
 			alert("Analysis failed. Check your API key in .env.local.");
 		} finally {
@@ -110,6 +111,13 @@ export function useDreamEntry(id: string) {
 		scheduleSave(title, e.target.value);
 	}
 
+	async function handleDateChange(localDatetimeValue: string) {
+		if (!dream) return;
+		const created_at = new Date(localDatetimeValue).toISOString();
+		await updateDream(dream.id, { created_at });
+		setDream((prev) => (prev ? { ...prev, created_at } : prev));
+	}
+
 	function handleBlur(newTitle: string, newBody: string) {
 		if (saveTimer.current) clearTimeout(saveTimer.current);
 		save(newTitle, newBody);
@@ -144,6 +152,7 @@ export function useDreamEntry(id: string) {
 		handleTitleChange,
 		handleBodyChange,
 		handleBlur,
+		handleDateChange,
 		runAnalysis: runAnalysisWithEdits,
 		handleDelete,
 		setShareToken,

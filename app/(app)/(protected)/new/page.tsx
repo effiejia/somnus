@@ -85,7 +85,7 @@ export function NewDreamPageUI({ hideCancel }: { hideCancel?: boolean } = {}) {
 				onChange={(e) => setBody(e.target.value)}
 				placeholder="What did you dream about?"
 				rows={1}
-				className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#333] wrap-break-word"
+				className="w-full font-serif-thin text-[#c0c0c0] text-base md:text-lg leading-relaxed bg-transparent border-none outline-none resize-none placeholder-[#555] wrap-break-word"
 			/>
 		</main>
 	);
