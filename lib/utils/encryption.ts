@@ -2,8 +2,9 @@ function getKeyHex(): string {
 	return process.env.NEXT_PUBLIC_DREAM_ENCRYPTION_KEY ?? "";
 }
 
-function hexToBytes(hex: string): Uint8Array {
-	const bytes = new Uint8Array(hex.length / 2);
+function hexToBytes(hex: string): Uint8Array<ArrayBuffer> {
+	const buf = new ArrayBuffer(hex.length / 2);
+	const bytes = new Uint8Array(buf);
 	for (let i = 0; i < hex.length; i += 2) {
 		bytes[i / 2] = parseInt(hex.slice(i, i + 2), 16);
 	}
