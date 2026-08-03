@@ -45,6 +45,7 @@ export default function DreamLogPage() {
 	} = useDreamLog();
 
 	const importOpen = useDreamStore((s) => s.importOpen);
+	const openImport = useDreamStore((s) => s.openImport);
 	const closeImport = useDreamStore((s) => s.closeImport);
 	const isMobile = useIsMobile();
 	const path = usePathname();
@@ -64,17 +65,25 @@ export default function DreamLogPage() {
 				className="max-w-3xl mx-auto px-4 md:px-0 pb-24"
 			>
 				{isEmpty ? (
-					<div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 px-8 text-center">
+					<div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] gap-4 px-8 text-center">
 						<h1 className="font-serif font-medium text-3xl text-[#ededed]">Dream log</h1>
 						<p className="text-[#6b6b6b] text-sm max-w-xs">
-							You haven&apos;t recorded any dreams yet. Tap the button below to begin.
+							You don't have any recorded dreams yet.
 						</p>
-						<button
-							onClick={goToNew}
-							className="mt-4 bg-[#ededed] text-[#0a0a0a] px-6 py-2 rounded-full text-sm font-medium hover:bg-white transition-colors"
-						>
-							New dream
-						</button>
+						<div className="flex items-center gap-3 mt-4">
+							<button
+								onClick={goToNew}
+								className="bg-[#ededed] text-[#0a0a0a] px-6 py-2 rounded-full text-sm font-medium hover:bg-white transition-colors"
+							>
+								New dream
+							</button>
+							<button
+								onClick={openImport}
+								className="border border-[#333] text-[#ededed] px-6 py-2 rounded-full text-sm hover:border-[#555] transition-colors"
+							>
+								Import dreams
+							</button>
+						</div>
 					</div>
 				) : (
 					<>

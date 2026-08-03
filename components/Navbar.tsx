@@ -96,7 +96,7 @@ export default function Navbar() {
 				<div className="flex items-center gap-3">
 					{/* Mobile search trigger */}
 					{showSearch && (
-						<button className="md:hidden text-[#6b6b6b]" onClick={() => setSearchOpen(true)}>
+						<button className="md:hidden text-[#6b6b6b] hover:text-[#ededed] p-1 transition-colors" onClick={() => setSearchOpen(true)}>
 							<svg
 								className="w-5 h-5"
 								fill="none"
@@ -113,7 +113,7 @@ export default function Navbar() {
 					{showImport && (
 						<TooltipIconButton
 							label="Import dreams"
-							icon={<ImportIcon className="w-4 h-4" />}
+							icon={<ImportIcon className="w-5 h-5" />}
 							onClick={openImport}
 						/>
 					)}

@@ -15,8 +15,9 @@ export async function generateTitle(body: string): Promise<string> {
 		});
 		const json = await res.json();
 		if (json.title) return json.title;
-	} catch {
-		/* fall through */
+		console.error("Title API error:", json.error);
+	} catch (err) {
+		console.error("Title fetch failed:", err);
 	}
 	return fallbackTitle(body);
 }

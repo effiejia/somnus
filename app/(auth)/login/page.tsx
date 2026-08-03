@@ -19,21 +19,19 @@ export default function LoginPage() {
 	const [password, setPassword] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
-	const [message, setMessage] = useState("");
 
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		setLoading(true);
 		setError("");
-		setMessage("");
 
 		if (mode === "signup") {
 			const { error } = await signUp(email, password);
 			if (error) {
 				setError(error.message);
 			} else {
-				setMessage("Check your email to confirm your account, then sign in.");
-				setMode("signin");
+				router.push("/");
+				router.refresh();
 			}
 		} else {
 			const { error } = await signIn(email, password);
@@ -70,9 +68,7 @@ export default function LoginPage() {
 					{mode === "signin" ? "Sign in to your dream log" : "Start recording your dreams"}
 				</p>
 
-				{message && <p className="text-green-400 text-sm text-center mb-6">{message}</p>}
-
-				<motion.form onSubmit={handleSubmit} className="space-y-4" variants={motionVariants}>
+<motion.form onSubmit={handleSubmit} className="space-y-4" variants={motionVariants}>
 					<div>
 						<input
 							type="email"
