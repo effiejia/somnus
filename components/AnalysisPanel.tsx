@@ -58,7 +58,7 @@ export default function AnalysisPanel({ analysis, onClose }: AnalysisPanelProps)
 				</div>
 
 				<div className="p-5 md:p-8">
-					<div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif-thin space-y-4 [&_strong]:text-[#ededed] [&_strong]:font-medium [&_em]:italic [&_ul]:space-y-2 [&_li]:ml-4 [&_li]:list-disc">
+					<div className="text-[#c0c0c0] text-sm md:text-base leading-relaxed font-serif-thin space-y-4 [&_strong]:text-[#ededed] [&_strong]:font-medium [&_em]:italic [&_ul]:space-y-2 [&_li]:ml-4 [&_li]:list-disc [&_hr]:hidden">
 						<ReactMarkdown>{analysis}</ReactMarkdown>
 					</div>
 				</div>
